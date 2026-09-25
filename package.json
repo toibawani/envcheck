@@ -1,0 +1,51 @@
+{
+  "name": "envcheck",
+  "version": "0.1.0",
+  "description": "Compare .env files against a schema of record. Catch missing keys, empty values, orphans, and typos before they hit production.",
+  "type": "module",
+  "bin": {
+    "envcheck": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "node --experimental-strip-types src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test test/**/*.test.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "author": {
+    "name": "Toiba",
+    "url": "https://github.com/toibawani",
+    "email": "toibawani14@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/toibawani/envcheck.git"
+  },
+  "bugs": {
+    "url": "https://github.com/toibawani/envcheck/issues"
+  },
+  "homepage": "https://github.com/toibawani/envcheck#readme",
+  "license": "MIT",
+  "keywords": [
+    "env",
+    "dotenv",
+    "cli",
+    "config",
+    "schema",
+    "secrets"
+  ],
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
+}
