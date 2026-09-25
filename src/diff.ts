@@ -54,6 +54,13 @@ export function diffFile(
     }
   }
 
+  missing.sort((a, b) => a.localeCompare(b));
+  empty.sort((a, b) => a.key.localeCompare(b.key));
+  extra.sort((a, b) => a.key.localeCompare(b.key));
+  typos.sort((a, b) => a.key.localeCompare(b.key));
+  interpolated.sort((a, b) => a.key.localeCompare(b.key));
+  const dups = [...parsed.duplicates].sort((a, b) => a.localeCompare(b));
+
   const report: FileReport = {
     path: filePath,
     missing,
@@ -61,7 +68,7 @@ export function diffFile(
     extra,
     typos,
     interpolated,
-    duplicates: parsed.duplicates,
+    duplicates: dups,
     ok: false,
   };
   report.ok =
@@ -69,7 +76,7 @@ export function diffFile(
     empty.length === 0 &&
     extra.length === 0 &&
     typos.length === 0 &&
-    parsed.duplicates.length === 0;
+    dups.length === 0;
   return report;
 }
 

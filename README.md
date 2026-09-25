@@ -35,6 +35,7 @@ node dist/cli.js check
 | --- | --- |
 | `envcheck check [dir]` | Scan and report. Exit 1 if anything drifted. |
 | `envcheck fix [dir]` | Prompt for missing keys, offer to drop orphans, preview, then write. |
+| `envcheck init [dir]` | Build `.env.example` from keys already in your `.env` files (never copies secrets). |
 | `envcheck about` | Version, author, exit codes. |
 | `envcheck --help` | Help for the command in front of the flag. |
 | `envcheck --version` | Version inlined from `package.json` at build time. |
@@ -47,7 +48,8 @@ node dist/cli.js check
 | `--ignore <glob>` | Extra ignore. Repeatable. Also reads `.gitignore` and `.envcheckignore`. |
 | `--max-distance <n>` | Typo cutoff. Default 3. |
 | `--reveal` | Print values. Default masks to the first and last two characters. |
-| `--json` | JSON on stdout. No color, no spinner. |
+| `--json` | JSON on stdout. No color, no spinner. Includes a `summary` object. |
+| `--force` | Allow `init` to overwrite an existing schema. |
 | `--no-color` | Disable ANSI. Also honored: `NO_COLOR`, non-TTY. |
 | `--verbose` | Attach the underlying error. Off by default — no raw stacks. |
 
@@ -75,66 +77,30 @@ ok  .env.test
     typo     DATBASE_URL → DATABASE_URL:2
     extra    OLD_FLAG:6 ol…ag
 
-4 issues across 2 files
+4 issues across 2 files  (1 missing, 1 empty, 1 typo, 1 extra)
 next: envcheck fix
 ```
 
-`envcheck fix` refuses to run when stdin is not a TTY, so CI cannot hang on a prompt. Use `envcheck check --json` there.
+No schema yet? Seed one from the keys you already use:
+
+```sh
+envcheck init
+# writes .env.example with KEY= lines only — never your secret values
+```
 
 ## Exit codes
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Every scanned file matches the schema. |
-| 1 | Drift: missing, empty, extra, typo, or duplicate. |
-| 2 | Bad usage, or `fix` without a TTY. |
-| 3 | No `.env*` files, or no schema. |
-| 4 | Permission denied, binary, or malformed syntax. |
-| 5 | `.envcheckrc` is not valid JSON. |
-| 6 | SIGINT. In-flight reads stop. A half-written temp file is removed. No partial rename. |
-| 7 | File changed under us, or the write was rejected by the OS. |
-
-## What it parses
-
-`KEY=value`, `export KEY=value`, single and double quotes, `#` comments (including the comment above a key, used as a default hint in `fix`), blank lines, backslash line continuations, and `${OTHER}` / `$OTHER` interpolation. Interpolation is flagged, not expanded — expanding it would mean executing someone else's env file.
-
-Invalid keys, unterminated quotes, and NUL bytes are errors with a file:line and a next step, not a stack trace.
-
-## Layout
-
-```text
-src/cli.ts         arguments, help, exit
-src/run.ts         check/fix orchestration
-src/scan.ts        walk, symlink-cycle stop, ignore stack
-src/gitignore.ts   pattern match
-src/parse.ts       file → entries
-src/parse-line.ts  one assignment
-src/diff.ts        missing / empty / extra / typo
-src/distance.ts    Levenshtein
-src/load.ts        read, UTF-8, binary reject
-src/format.ts      text and JSON
-src/fix.ts         prompts, preview, write
-src/atomic.ts      temp file + rename
-src/config.ts      .envcheckrc
-src/color.ts       NO_COLOR / TTY
-src/errors.ts      what / why / fix
-src/signals.ts     SIGINT
-```
-
-No circular imports. No runtime dependencies. `cac` and `commander` both lost to a 80-line parser: the flag surface is small, and a parser framework would be the only dependency on the cold-start path. Color is a few ANSI wrappers for the same reason — picocolors would be the right package if we needed it, but we don't.
-
-Spinners are hand-rolled and only start if a scan is still going after 100ms, and only on a TTY. Piped output stays quiet.
-
-## Versioning
-
-`v0.1.0` is the first tagged build that scans, diffs, and fixes. From here:
-
-- **patch** — bugfix, same flags, same exit codes, same JSON shape
-- **minor** — new flag or new report field
-- **major** — exit code change, removed flag, or a JSON rename
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+| 0 | Match |
+| 1 | Drift |
+| 2 | Usage |
+| 3 | Nothing to scan / no schema |
+| 4 | Unreadable / binary / bad UTF-8 |
+| 5 | Bad `.envcheckrc` |
+| 6 | Interrupted (SIGINT) |
+| 7 | File locked on write |
 
 ## License
 
-MIT. Copyright Toiba.
+MIT

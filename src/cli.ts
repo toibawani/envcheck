@@ -6,12 +6,14 @@ import { Exit } from "./exit.ts";
 import { armSignals } from "./signals.ts";
 import { version } from "./version.ts";
 import { runCheck, runFix } from "./run.ts";
+import { runInit } from "./init.ts";
 
 const HELP = `envcheck — compare .env files to a schema of record
 
 usage
   envcheck check [dir] [flags]
   envcheck fix [dir]
+  envcheck init [dir]
   envcheck about
   envcheck --help
   envcheck --version
@@ -19,6 +21,7 @@ usage
 commands
   check     scan and report missing, empty, extra, and typo'd keys
   fix       walk missing and orphaned keys, preview, then write
+  init      build .env.example from keys already in your .env files
   about     version, author, exit codes
 
 flags
@@ -27,6 +30,7 @@ flags
   --max-distance <n>  typo suggestion cutoff (default 3)
   --reveal            print secret values (default: masked)
   --json              machine-readable report
+  --force             allow init to overwrite an existing schema
   --no-color          disable color even on a TTY
   --verbose           include the underlying error message
   -h, --help          this text
@@ -51,6 +55,7 @@ interface Parsed {
   maxDistance?: number;
   reveal: boolean;
   json: boolean;
+  force: boolean;
   noColor: boolean;
   verbose: boolean;
   help: boolean;
@@ -64,6 +69,7 @@ function parseArgs(args: string[]): Parsed {
     ignore: [],
     reveal: false,
     json: false,
+    force: false,
     noColor: false,
     verbose: false,
     help: false,
@@ -76,6 +82,7 @@ function parseArgs(args: string[]): Parsed {
     else if (a === "--version" || a === "-v") out.version = true;
     else if (a === "--json") out.json = true;
     else if (a === "--reveal") out.reveal = true;
+    else if (a === "--force") out.force = true;
     else if (a === "--no-color") out.noColor = true;
     else if (a === "--verbose") out.verbose = true;
     else if (a === "--schema") out.schema = need(args, ++i, "--schema");
@@ -85,7 +92,7 @@ function parseArgs(args: string[]): Parsed {
       failUsage(`Unknown flag ${a}.`, `envcheck --help`);
     } else positional.push(a);
   }
-  if (positional[0] && ["check", "fix", "about"].includes(positional[0])) {
+  if (positional[0] && ["check", "fix", "init", "about"].includes(positional[0])) {
     out.command = positional[0];
     if (positional[1]) out.dir = positional[1];
     if (positional.length > 2) failUsage(`Unexpected argument ${positional[2]}.`, "envcheck --help");
@@ -143,6 +150,17 @@ async function main(): Promise<void> {
     exit(outcome.exitCode);
   }
 
+  if (parsed.command === "init") {
+    const outcome = runInit({
+      cwd: flags.cwd,
+      schema: flags.schema,
+      ignore: flags.ignore,
+      force: parsed.force,
+    });
+    stdout.write(outcome.text);
+    exit(outcome.exitCode);
+  }
+
   const outcome = runCheck(flags);
   stdout.write(outcome.text);
   exit(outcome.exitCode);
@@ -157,6 +175,20 @@ usage
 
 fix never writes without showing a diff and asking. It refuses to run when
 stdin is not a TTY (CI, pipes) so it cannot hang waiting for input.
+
+author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
+`;
+  }
+  if (command === "init") {
+    return `envcheck init — create a schema from existing .env keys
+
+usage
+  envcheck init [dir] [--schema <file>] [--force]
+
+Collects every key from discovered .env* files (never copies secret values)
+and writes them as KEY= lines into .env.example (or --schema).
+
+Refuses to overwrite unless --force is passed.
 
 author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
 `;

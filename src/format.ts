@@ -48,7 +48,9 @@ export function renderText(input: RenderInput): string {
     }
     for (const e of report.extra) {
       problems++;
-      const shown = input.reveal ? loaded.parsed.map.get(e.key)?.value ?? "" : maskValue(loaded.parsed.map.get(e.key)?.value ?? "");
+      const shown = input.reveal
+        ? loaded.parsed.map.get(e.key)?.value ?? ""
+        : maskValue(loaded.parsed.map.get(e.key)?.value ?? "");
       lines.push(`    ${c.dim("extra")}    ${e.key}${c.dim(`:${e.line}`)} ${c.dim(shown)}`);
     }
     for (const d of report.duplicates) {
@@ -62,10 +64,31 @@ export function renderText(input: RenderInput): string {
 
   lines.push("");
   if (problems === 0) {
-    lines.push(c.green(`${input.files.length} file${input.files.length === 1 ? "" : "s"} match ${input.schemaRel}`));
-  } else {
     lines.push(
-      `${c.red(String(problems))} issue${problems === 1 ? "" : "s"} across ${input.files.length} file${input.files.length === 1 ? "" : "s"}`,
+      c.green(
+        `${input.files.length} file${input.files.length === 1 ? "" : "s"} match ${input.schemaRel}`,
+      ),
+    );
+  } else {
+    const counts = { missing: 0, empty: 0, typo: 0, extra: 0, dup: 0, other: 0 };
+    for (const { loaded, report } of input.files) {
+      counts.missing += report.missing.length;
+      counts.empty += report.empty.length;
+      counts.typo += report.typos.length;
+      counts.extra += report.extra.length;
+      counts.dup += report.duplicates.length;
+      if (loaded.emptyFile || loaded.noPairs) counts.other++;
+    }
+    const parts: string[] = [];
+    if (counts.missing) parts.push(`${counts.missing} missing`);
+    if (counts.empty) parts.push(`${counts.empty} empty`);
+    if (counts.typo) parts.push(`${counts.typo} typo`);
+    if (counts.extra) parts.push(`${counts.extra} extra`);
+    if (counts.dup) parts.push(`${counts.dup} dup`);
+    if (counts.other) parts.push(`${counts.other} empty-file`);
+    lines.push(
+      `${c.red(String(problems))} issue${problems === 1 ? "" : "s"} across ${input.files.length} file${input.files.length === 1 ? "" : "s"}` +
+        (parts.length ? c.dim(`  (${parts.join(", ")})`) : ""),
     );
     lines.push(c.dim("next: envcheck fix"));
   }
@@ -84,14 +107,30 @@ export function renderJson(input: RenderInput): string {
     extra: report.extra.map((e) => ({
       key: e.key,
       line: e.line,
-      value: input.reveal ? loaded.parsed.map.get(e.key)?.value ?? "" : maskValue(loaded.parsed.map.get(e.key)?.value ?? ""),
+      value: input.reveal
+        ? loaded.parsed.map.get(e.key)?.value ?? ""
+        : maskValue(loaded.parsed.map.get(e.key)?.value ?? ""),
     })),
     typos: report.typos,
     interpolated: report.interpolated,
     duplicates: report.duplicates,
   }));
-  const issueCount = files.reduce((n, f) => {
-    return n + f.missing.length + f.empty.length + f.extra.length + f.typos.length + f.duplicates.length + (f.emptyFile || f.noPairs ? 1 : 0);
-  }, 0);
-  return JSON.stringify({ schema: input.schemaRel, files, issueCount, ok: issueCount === 0 }, null, 2) + "\n";
+  const summary = {
+    missing: files.reduce((n, f) => n + f.missing.length, 0),
+    empty: files.reduce((n, f) => n + f.empty.length, 0),
+    extra: files.reduce((n, f) => n + f.extra.length, 0),
+    typos: files.reduce((n, f) => n + f.typos.length, 0),
+    duplicates: files.reduce((n, f) => n + f.duplicates.length, 0),
+  };
+  const issueCount =
+    summary.missing +
+    summary.empty +
+    summary.extra +
+    summary.typos +
+    summary.duplicates +
+    files.reduce((n, f) => n + (f.emptyFile || f.noPairs ? 1 : 0), 0);
+  return (
+    JSON.stringify({ schema: input.schemaRel, files, summary, issueCount, ok: issueCount === 0 }, null, 2) +
+    "\n"
+  );
 }
