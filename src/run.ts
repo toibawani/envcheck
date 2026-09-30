@@ -12,6 +12,8 @@ import { c } from "./color.ts";
 import { fixFile } from "./fix.ts";
 import { assertInteractive } from "./prompt.ts";
 
+export type FailOnKind = "missing" | "empty" | "extra" | "typo" | "dup";
+
 export interface CheckFlags {
   cwd: string;
   schema?: string;
@@ -19,6 +21,7 @@ export interface CheckFlags {
   reveal: boolean;
   ignore: string[];
   maxDistance?: number;
+  failOn?: FailOnKind[];
 }
 
 export interface CheckOutcome {
@@ -37,11 +40,29 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),
     })),
   };
-  const text = flags.json ? renderJson(input) : renderText(input);
-  const drifted = input.files.some(
-    (f) => !f.report.ok || f.loaded.emptyFile || f.loaded.noPairs,
-  );
-  return { exitCode: drifted ? Exit.Drift : Exit.Ok, text };
+  const drifted = hasDrift(input.files, flags.failOn);
+  const exitCode = drifted ? Exit.Drift : Exit.Ok;
+  const text = flags.json ? renderJson({ ...input, exitCode }) : renderText(input);
+  return { exitCode, text };
+}
+
+function hasDrift(
+  files: { loaded: LoadedEnv; report: import("./diff.ts").FileReport }[],
+  failOn: FailOnKind[] | undefined,
+): boolean {
+  const kinds = failOn && failOn.length > 0 ? new Set(failOn) : null;
+  for (const { loaded, report } of files) {
+    if (!kinds) {
+      if (!report.ok || loaded.emptyFile || loaded.noPairs) return true;
+      continue;
+    }
+    if (kinds.has("missing") && report.missing.length) return true;
+    if (kinds.has("empty") && (report.empty.length || loaded.emptyFile || loaded.noPairs)) return true;
+    if (kinds.has("extra") && report.extra.length) return true;
+    if (kinds.has("typo") && report.typos.length) return true;
+    if (kinds.has("dup") && report.duplicates.length) return true;
+  }
+  return false;
 }
 
 export async function runFix(flags: CheckFlags): Promise<CheckOutcome> {

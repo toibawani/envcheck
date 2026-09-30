@@ -31,6 +31,8 @@ flags
   --reveal            print secret values (default: masked)
   --json              machine-readable report
   --force             allow init to overwrite an existing schema
+  --fail-on <list>     exit 1 only for these kinds: missing,empty,extra,typo,dup
+  --dry-run           init: print the schema, write nothing
   --no-color          disable color even on a TTY
   --verbose           include the underlying error message
   -h, --help          this text
@@ -56,6 +58,8 @@ interface Parsed {
   reveal: boolean;
   json: boolean;
   force: boolean;
+  failOn: string[];
+  dryRun: boolean;
   noColor: boolean;
   verbose: boolean;
   help: boolean;
@@ -70,6 +74,8 @@ function parseArgs(args: string[]): Parsed {
     reveal: false,
     json: false,
     force: false,
+    failOn: [],
+    dryRun: false,
     noColor: false,
     verbose: false,
     help: false,
@@ -83,6 +89,14 @@ function parseArgs(args: string[]): Parsed {
     else if (a === "--json") out.json = true;
     else if (a === "--reveal") out.reveal = true;
     else if (a === "--force") out.force = true;
+    else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--fail-on") {
+      const raw = need(args, ++i, "--fail-on");
+      for (const part of raw.split(",")) {
+        const p = part.trim().toLowerCase();
+        if (p) out.failOn.push(p);
+      }
+    }
     else if (a === "--no-color") out.noColor = true;
     else if (a === "--verbose") out.verbose = true;
     else if (a === "--schema") out.schema = need(args, ++i, "--schema");
@@ -135,6 +149,16 @@ async function main(): Promise<void> {
     return;
   }
 
+  const failOnAllowed = new Set(["missing", "empty", "extra", "typo", "dup"]);
+  for (const k of parsed.failOn) {
+    if (!failOnAllowed.has(k)) {
+      failUsage(
+        `Unknown --fail-on kind "${k}".`,
+        "envcheck check --fail-on missing,empty,extra,typo,dup",
+      );
+    }
+  }
+
   const flags = {
     cwd: resolve(parsed.dir),
     schema: parsed.schema,
@@ -142,6 +166,7 @@ async function main(): Promise<void> {
     reveal: parsed.reveal,
     ignore: parsed.ignore,
     maxDistance: parsed.maxDistance,
+    failOn: parsed.failOn as import("./run.ts").FailOnKind[],
   };
 
   if (parsed.command === "fix") {
@@ -156,6 +181,7 @@ async function main(): Promise<void> {
       schema: flags.schema,
       ignore: flags.ignore,
       force: parsed.force,
+      dryRun: parsed.dryRun,
     });
     stdout.write(outcome.text);
     exit(outcome.exitCode);

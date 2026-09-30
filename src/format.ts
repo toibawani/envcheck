@@ -1,3 +1,4 @@
+import { version } from "./version.ts";
 import { c } from "./color.ts";
 import type { FileReport } from "./diff.ts";
 import { maskValue } from "./parse.ts";
@@ -9,6 +10,7 @@ export interface RenderInput {
   files: { loaded: LoadedEnv; report: FileReport }[];
   reveal: boolean;
   ignoredNote?: string;
+  exitCode?: number;
 }
 
 export function renderText(input: RenderInput): string {
@@ -130,7 +132,7 @@ export function renderJson(input: RenderInput): string {
     summary.duplicates +
     files.reduce((n, f) => n + (f.emptyFile || f.noPairs ? 1 : 0), 0);
   return (
-    JSON.stringify({ schema: input.schemaRel, files, summary, issueCount, ok: issueCount === 0 }, null, 2) +
+    JSON.stringify({ version: version(), schema: input.schemaRel, files, summary, issueCount, ok: issueCount === 0, exitCode: input.exitCode ?? (issueCount === 0 ? 0 : 1) }, null, 2) +
     "\n"
   );
 }
