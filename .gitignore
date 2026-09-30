@@ -3,10 +3,10 @@ dist/
 coverage/
 *.tsbuildinfo
 
-# the tool itself is about these, but the repo shouldn't ship secrets
-.env
-.env.*
-!.env.example
+# root env only — fixtures under test/ must stay tracked
+/.env
+/.env.*
+!/.env.example
 
 .DS_Store
 Thumbs.db
