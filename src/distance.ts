@@ -30,16 +30,48 @@ export function levenshtein(a: string, b: string, cap = 8): number {
   return prev[b.length] ?? cap + 1;
 }
 
+function sharedPrefixLen(a: string, b: string): number {
+  const n = Math.min(a.length, b.length);
+  let i = 0;
+  while (i < n && a.charCodeAt(i) === b.charCodeAt(i)) i++;
+  return i;
+}
+
+function isTransposition(a: string, b: string): boolean {
+  if (a.length !== b.length || a.length < 2) return false;
+  let i = 0;
+  while (i < a.length && a[i] === b[i]) i++;
+  if (i >= a.length - 1) return false;
+  if (a[i] === b[i + 1] && a[i + 1] === b[i] && a.slice(i + 2) === b.slice(i + 2)) return true;
+  return false;
+}
+
 export function suggestKey(needle: string, schemaKeys: string[], maxDistance: number): string | undefined {
   const upper = needle.toUpperCase();
+  if (upper.length < 2) return undefined;
+
   let best: string | undefined;
   let bestDist = maxDistance + 1;
+  let bestPrefix = -1;
+  let bestTrans = false;
+
   for (const key of schemaKeys) {
-    const d = levenshtein(upper, key.toUpperCase(), maxDistance);
-    if (d > 0 && d < bestDist) {
+    if (key.length < 4) continue;
+    const cand = key.toUpperCase();
+    if (cand === upper) continue;
+    const d = levenshtein(upper, cand, maxDistance);
+    if (d <= 0 || d > maxDistance) continue;
+    const prefix = sharedPrefixLen(upper, cand);
+    const trans = d === 2 && isTransposition(upper, cand);
+    const better =
+      d < bestDist ||
+      (d === bestDist && trans && !bestTrans) ||
+      (d === bestDist && trans === bestTrans && prefix > bestPrefix);
+    if (better) {
       best = key;
       bestDist = d;
-      if (d === 1) return key;
+      bestPrefix = prefix;
+      bestTrans = trans;
     }
   }
   return best;
