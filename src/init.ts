@@ -18,6 +18,7 @@ export interface InitFlags {
   schema?: string;
   ignore: string[];
   force: boolean;
+  dryRun: boolean;
 }
 
 export interface InitOutcome {
@@ -32,7 +33,7 @@ export function runInit(flags: InitFlags): InitOutcome {
   const outName = flags.schema ?? config.schema ?? ".env.example";
   const outAbs = join(root, outName);
 
-  if (existsSync(outAbs) && !flags.force) {
+  if (existsSync(outAbs) && !flags.force && !flags.dryRun) {
     throw new EnvcheckError(
       Exit.Usage,
       `${outName} already exists.`,
@@ -96,7 +97,18 @@ export function runInit(flags: InitFlags): InitOutcome {
   }
   lines.push("");
 
-  writeAtomic(outAbs, lines.join("\n"), undefined);
+  const body = lines.join("\n");
+
+  if (flags.dryRun) {
+    const text = [
+      c.dim(`# dry-run: would write ${outName} (${keyOrder.length} keys)`),
+      body.trimEnd(),
+      "",
+    ].join("\n");
+    return { exitCode: Exit.Ok, text };
+  }
+
+  writeAtomic(outAbs, body, undefined);
 
   const text = [
     `${c.green("wrote")} ${outName}  ${c.dim(`${keyOrder.length} keys from ${sources.length} file${sources.length === 1 ? "" : "s"}`)}`,
