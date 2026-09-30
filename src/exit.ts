@@ -1,14 +1,6 @@
 /**
  * Exit codes are part of the public contract. CI scripts can branch on them.
- *
- * 0  clean — schema matches every scanned file
- * 1  drift — missing, empty, extra, or typo'd keys
- * 2  usage — bad flags, missing required argument, non-interactive `fix`
- * 3  not found — no .env files, or no schema
- * 4  unreadable — permission denied, binary, or malformed syntax
- * 5  config — .envcheckrc is not valid JSON
- * 6  interrupted — SIGINT; in-flight reads aborted, no partial write left behind
- * 7  locked — target file changed under us, or the lock was already held
+ * about renders EXIT_TABLE so the docs cannot drift from the code.
  */
 export const Exit = {
   Ok: 0,
@@ -22,3 +14,18 @@ export const Exit = {
 } as const;
 
 export type ExitCode = (typeof Exit)[keyof typeof Exit];
+
+export const EXIT_TABLE: ReadonlyArray<{ code: ExitCode; label: string }> = [
+  { code: Exit.Ok, label: "clean — every scanned file matches the schema" },
+  { code: Exit.Drift, label: "drift — missing, empty, extra, typo, or dup keys" },
+  { code: Exit.Usage, label: "usage — bad flags, or fix with no TTY" },
+  { code: Exit.NotFound, label: "not found — no .env files, or no schema" },
+  { code: Exit.Unreadable, label: "unreadable — permission, binary, or bad syntax" },
+  { code: Exit.Config, label: "config — .envcheckrc is not valid JSON" },
+  { code: Exit.Interrupted, label: "interrupted — SIGINT; no partial write left" },
+  { code: Exit.Locked, label: "locked — target changed under us, or busy" },
+];
+
+export function formatExitTable(): string {
+  return EXIT_TABLE.map((row) => `  ${row.code}  ${row.label}`).join("\n");
+}

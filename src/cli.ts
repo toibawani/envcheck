@@ -2,7 +2,7 @@ import { argv, exit, stderr, stdout } from "node:process";
 import { resolve } from "node:path";
 import { configureColor, c } from "./color.ts";
 import { isEnvcheckError } from "./errors.ts";
-import { Exit } from "./exit.ts";
+import { Exit, formatExitTable } from "./exit.ts";
 import { armSignals } from "./signals.ts";
 import { version } from "./version.ts";
 import { runCheck, runFix } from "./run.ts";
@@ -233,7 +233,8 @@ function aboutText(): string {
     "A schema-of-record check for .env files.",
     "Repo: https://github.com/toibawani/envcheck",
     "",
-    "exit  0 ok  1 drift  2 usage  3 not found  4 unreadable  5 config  6 interrupted  7 locked",
+    "exit codes",
+    formatExitTable(),
     "",
   ].join("\n");
 }
