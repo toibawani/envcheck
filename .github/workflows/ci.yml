@@ -7,14 +7,28 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
       - run: node dist/cli.js --version
+      - name: smoke golden fixture
+        run: |
+          set +e
+          node dist/cli.js check test/fixtures/golden
+          code=$?
+          set -e
+          test "$code" -eq 1
+      - name: pack only ships dist README LICENSE
+        run: |
+          npm pack --dry-run 2>&1 | tee /tmp/pack.txt
+          ! grep -E 'test/fixtures|demo/\.env' /tmp/pack.txt
