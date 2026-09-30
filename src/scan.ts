@@ -79,7 +79,20 @@ export function scanEnvFiles(opts: ScanOptions): FoundFile[] {
     }
 
     for (const ent of entries) {
-      if (ent.name === ".git" || ent.name === "node_modules") continue;
+      if (
+        ent.name === ".git" ||
+        ent.name === "node_modules" ||
+        ent.name === "dist" ||
+        ent.name === "build" ||
+        ent.name === "coverage" ||
+        ent.name === ".next" ||
+        ent.name === ".turbo" ||
+        ent.name === ".cache" ||
+        ent.name === "out" ||
+        ent.name === ".vercel"
+      ) {
+        continue;
+      }
       const abs = join(dir, ent.name);
       let isDir = ent.isDirectory();
       let isFile = ent.isFile();
