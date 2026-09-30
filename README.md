@@ -19,9 +19,7 @@ Or without installing:
 npx envcheck check
 ```
 
-Node 18 or newer. The published package is a single bundled file. No TypeScript at runtime.
-
-From a checkout:
+Node 18 or newer. Single bundled file. No TypeScript at runtime.
 
 ```sh
 npm install
@@ -37,69 +35,77 @@ node dist/cli.js check
 | `envcheck fix [dir]` | Prompt for missing keys, offer to drop orphans, preview, then write. |
 | `envcheck init [dir]` | Build `.env.example` from keys already in your `.env` files (never copies secrets). |
 | `envcheck about` | Version, author, exit codes. |
-| `envcheck --help` | Help for the command in front of the flag. |
-| `envcheck --version` | Version inlined from `package.json` at build time. |
 
-### Flags
+### Flags that matter
 
 | Flag | |
 | --- | --- |
 | `--schema <file>` | Contract file. Default: `.env.example`, then `.env.sample`, then `.env.template`. |
+| `--fail-on <list>` | Exit 1 only for these kinds: `missing,empty,extra,typo,dup`. Default: all. |
 | `--ignore <glob>` | Extra ignore. Repeatable. Also reads `.gitignore` and `.envcheckignore`. |
 | `--max-distance <n>` | Typo cutoff. Default 3. |
-| `--reveal` | Print values. Default masks to the first and last two characters. |
-| `--json` | JSON on stdout. No color, no spinner. Includes a `summary` object. |
+| `--reveal` | Print values. Default masks short secrets fully. |
+| `--json` | JSON on stdout with `version`, `summary`, `exitCode`. |
 | `--force` | Allow `init` to overwrite an existing schema. |
-| `--no-color` | Disable ANSI. Also honored: `NO_COLOR`, non-TTY. |
-| `--verbose` | Attach the underlying error. Off by default — no raw stacks. |
+| `--dry-run` | `init` prints the schema and writes nothing. |
+| `--no-color` | Disable ANSI. Also: `NO_COLOR`, non-TTY. |
 
 CLI flags override `.envcheckrc`.
-
-```json
-{
-  "schema": ".env.example",
-  "ignore": ["**/.env.local"],
-  "maxDistance": 2
-}
-```
 
 ## Example
 
 ```text
-$ envcheck check
-envcheck /Users/you/app
-schema .env.example
-
-ok  .env.test
+$ envcheck check test/fixtures/golden
 !!  .env
-    missing  STRIPE_SECRET
-    empty    PORT:4
+    empty    PORT:5
+    empty    REDIS_URL:6
     typo     DATBASE_URL → DATABASE_URL:2
-    extra    OLD_FLAG:6 ol…ag
-
-4 issues across 2 files  (1 missing, 1 empty, 1 typo, 1 extra)
+    extra    EXTRA_ORPHAN:7 ••••
 next: envcheck fix
 ```
 
-No schema yet? Seed one from the keys you already use:
+Strict CI that only fails on typos:
 
 ```sh
+envcheck check --fail-on typo
+```
+
+No schema yet:
+
+```sh
+envcheck init --dry-run
 envcheck init
-# writes .env.example with KEY= lines only — never your secret values
+```
+
+## CI
+
+GitHub Actions:
+
+```yaml
+- run: npm i -g envcheck
+- run: envcheck check --json
+```
+
+Pre-commit:
+
+```sh
+envcheck check --fail-on missing,typo
 ```
 
 ## Exit codes
 
 | Code | Meaning |
 | --- | --- |
-| 0 | Match |
+| 0 | Clean |
 | 1 | Drift |
 | 2 | Usage |
 | 3 | Nothing to scan / no schema |
-| 4 | Unreadable / binary / bad UTF-8 |
+| 4 | Unreadable / binary / bad syntax |
 | 5 | Bad `.envcheckrc` |
 | 6 | Interrupted (SIGINT) |
 | 7 | File locked on write |
+
+Same table is printed by `envcheck about`.
 
 ## License
 
