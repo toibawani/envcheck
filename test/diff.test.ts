@@ -14,3 +14,36 @@ test("missing, empty, extra, typo", () => {
   assert.deepEqual(report.extra.map((e) => e.key), ["EXTRA"]);
   assert.equal(report.ok, false);
 });
+
+test("diffFile reports interpolated keys", () => {
+  const schema = parseEnv("BASE_URL=https://api.example.com\n", "schema");
+  const file = parseEnv("URL=${BASE_URL}/v1\n", ".env");
+  const report = diffFile(".env", file, schema, 3);
+  assert.equal(report.interpolated[0]?.key, "URL");
+  assert.deepEqual(report.interpolated[0]?.refs, ["BASE_URL"]);
+});
+
+test("diffFile reports duplicate keys", () => {
+  const schema = parseEnv("A=1\n", "schema");
+  const file = parseEnv("A=1\nA=2\n", ".env");
+  const report = diffFile(".env", file, schema, 3);
+  assert.deepEqual(report.duplicates, ["A"]);
+});
+
+test("diffFile reports ok when file matches schema", () => {
+  const schema = parseEnv("A=1\nB=2\n", "schema");
+  const file = parseEnv("A=1\nB=2\n", ".env");
+  const report = diffFile(".env", file, schema, 3);
+  assert.equal(report.ok, true);
+  assert.deepEqual(report.missing, []);
+  assert.deepEqual(report.extra, []);
+  assert.deepEqual(report.typos, []);
+});
+
+test("diffFile reports empty file", () => {
+  const schema = parseEnv("A=1\n", "schema");
+  const file = parseEnv("", ".env");
+  const report = diffFile(".env", file, schema, 3);
+  assert.deepEqual(report.missing, ["A"]);
+  assert.equal(report.ok, false);
+});
