@@ -169,7 +169,16 @@ function collect(flags: CheckFlags): {
   }
 
   const compared = files
-    .filter((f) => f.rel !== schemaRel)
+    .filter(
+      (f) =>
+        f.rel !== schemaRel &&
+        ![
+          defaultSchemaRel(files) ?? "",
+          ".env.example",
+          ".env.sample",
+          ".env.template",
+        ].includes(f.rel),
+    )
     .map((f) => loadEnvFile(f.abs, f.rel));
 
   if (compared.length === 0) {
