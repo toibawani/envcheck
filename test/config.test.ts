@@ -1,14 +1,14 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { loadConfig } from "../src/config.ts";
-import { EnvcheckError } from "../src/errors.ts";
-import { Exit } from "../src/exit.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { loadConfig } from '../src/config.ts';
+import { EnvcheckError } from '../src/errors.ts';
+import { Exit } from '../src/exit.ts';
 
-test("loadConfig returns defaults when no config file exists", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig returns defaults when no config file exists', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
     const result = loadConfig(dir);
     assert.equal(result.schema, undefined);
@@ -21,37 +21,41 @@ test("loadConfig returns defaults when no config file exists", () => {
   }
 });
 
-test("loadConfig reads .envcheckrc", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig reads .envcheckrc', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
-    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ schema: ".env.schema", maxDistance: 5 }), "utf8");
+    writeFileSync(
+      join(dir, '.envcheckrc'),
+      JSON.stringify({ schema: '.env.schema', maxDistance: 5 }),
+      'utf8',
+    );
     const result = loadConfig(dir);
-    assert.equal(result.schema, ".env.schema");
+    assert.equal(result.schema, '.env.schema');
     assert.equal(result.maxDistance, 5);
-    assert.equal(result.configPath, join(dir, ".envcheckrc"));
+    assert.equal(result.configPath, join(dir, '.envcheckrc'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("loadConfig reads .envcheckrc over .envcheckrc.json", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig reads .envcheckrc over .envcheckrc.json', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
     // .envcheckrc is checked first, so it wins when both exist.
-    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ schema: ".env.example" }), "utf8");
-    writeFileSync(join(dir, ".envcheckrc.json"), JSON.stringify({ schema: ".env.schema" }), "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ schema: '.env.example' }), 'utf8');
+    writeFileSync(join(dir, '.envcheckrc.json'), JSON.stringify({ schema: '.env.schema' }), 'utf8');
     const result = loadConfig(dir);
-    assert.equal(result.schema, ".env.example");
-    assert.equal(result.configPath, join(dir, ".envcheckrc"));
+    assert.equal(result.schema, '.env.example');
+    assert.equal(result.configPath, join(dir, '.envcheckrc'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("loadConfig throws Exit.Config on invalid JSON", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig throws Exit.Config on invalid JSON', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
-    writeFileSync(join(dir, ".envcheckrc"), "{ not json", "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), '{ not json', 'utf8');
     assert.throws(
       () => loadConfig(dir),
       (err: unknown) => err instanceof EnvcheckError && err.exitCode === Exit.Config,
@@ -61,10 +65,10 @@ test("loadConfig throws Exit.Config on invalid JSON", () => {
   }
 });
 
-test("loadConfig throws Exit.Config on non-object JSON", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig throws Exit.Config on non-object JSON', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
-    writeFileSync(join(dir, ".envcheckrc"), "[1,2,3]", "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), '[1,2,3]', 'utf8');
     assert.throws(
       () => loadConfig(dir),
       (err: unknown) => err instanceof EnvcheckError && err.exitCode === Exit.Config,
@@ -74,10 +78,10 @@ test("loadConfig throws Exit.Config on non-object JSON", () => {
   }
 });
 
-test("loadConfig throws Exit.Config on invalid ignore field", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig throws Exit.Config on invalid ignore field', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
-    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ ignore: "not-an-array" }), "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ ignore: 'not-an-array' }), 'utf8');
     assert.throws(
       () => loadConfig(dir),
       (err: unknown) => err instanceof EnvcheckError && err.exitCode === Exit.Config,
@@ -87,10 +91,10 @@ test("loadConfig throws Exit.Config on invalid ignore field", () => {
   }
 });
 
-test("loadConfig throws Exit.Config on negative maxDistance", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig throws Exit.Config on negative maxDistance', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
-    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ maxDistance: -1 }), "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ maxDistance: -1 }), 'utf8');
     assert.throws(
       () => loadConfig(dir),
       (err: unknown) => err instanceof EnvcheckError && err.exitCode === Exit.Config,
@@ -100,16 +104,13 @@ test("loadConfig throws Exit.Config on negative maxDistance", () => {
   }
 });
 
-
-
-
-test("loadConfig does not search parent directories", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
-  const child = join(dir, "child");
+test('loadConfig does not search parent directories', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
+  const child = join(dir, 'child');
   mkdirSync(child, { recursive: true });
   try {
     // Put a config in the parent but not the child.
-    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ schema: "from-parent" }), "utf8");
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ schema: 'from-parent' }), 'utf8');
     const result = loadConfig(child);
     assert.equal(result.schema, undefined);
     assert.equal(result.configPath, undefined);
@@ -118,8 +119,8 @@ test("loadConfig does not search parent directories", () => {
   }
 });
 
-test("loadConfig throws Exit.Config when config file is unreadable", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+test('loadConfig throws Exit.Config when config file is unreadable', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
   try {
     // On most systems we can't easily create an unreadable config here without
     // root; fall back to a valid parse path. The core contract (valid JSON ->

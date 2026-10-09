@@ -1,13 +1,26 @@
-import { closeSync, openSync, writeSync, fsyncSync, renameSync, unlinkSync, statSync, constants } from "node:fs";
-import { dirname, join } from "node:path";
-import { randomBytes } from "node:crypto";
-import { EnvcheckError } from "./errors.ts";
-import { Exit } from "./exit.ts";
-import { onAbort } from "./signals.ts";
+import {
+  closeSync,
+  openSync,
+  writeSync,
+  fsyncSync,
+  renameSync,
+  unlinkSync,
+  statSync,
+  constants,
+} from 'node:fs';
+import { dirname, join } from 'node:path';
+import { randomBytes } from 'node:crypto';
+import { EnvcheckError } from './errors.ts';
+import { Exit } from './exit.ts';
+import { onAbort } from './signals.ts';
 
-export function writeAtomic(path: string, contents: string, expectedMtime: number | undefined): void {
+export function writeAtomic(
+  path: string,
+  contents: string,
+  expectedMtime: number | undefined,
+): void {
   const dir = dirname(path);
-  const tmp = join(dir, `.envcheck-${randomBytes(6).toString("hex")}.tmp`);
+  const tmp = join(dir, `.envcheck-${randomBytes(6).toString('hex')}.tmp`);
   const off = onAbort(() => {
     try {
       unlinkSync(tmp);
@@ -35,7 +48,7 @@ export function writeAtomic(path: string, contents: string, expectedMtime: numbe
     }
 
     fd = openSync(tmp, constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL, 0o600);
-    const buf = Buffer.from(contents, "utf8");
+    const buf = Buffer.from(contents, 'utf8');
     writeSync(fd, buf);
     fsyncSync(fd);
     closeSync(fd);
@@ -56,7 +69,7 @@ export function writeAtomic(path: string, contents: string, expectedMtime: numbe
     }
     if (err instanceof EnvcheckError) throw err;
     const code = (err as NodeJS.ErrnoException).code;
-    if (code === "EACCES" || code === "EPERM" || code === "EBUSY" || code === "ETXTBSY") {
+    if (code === 'EACCES' || code === 'EPERM' || code === 'EBUSY' || code === 'ETXTBSY') {
       throw new EnvcheckError(
         Exit.Locked,
         `Could not write ${path}.`,
@@ -68,7 +81,7 @@ export function writeAtomic(path: string, contents: string, expectedMtime: numbe
       Exit.Unreadable,
       `Write to ${path} failed.`,
       (err as Error).message,
-      "Nothing was renamed into place. Fix the underlying error and re-run envcheck fix.",
+      'Nothing was renamed into place. Fix the underlying error and re-run envcheck fix.',
     );
   } finally {
     off();

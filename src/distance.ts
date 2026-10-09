@@ -46,7 +46,11 @@ function isTransposition(a: string, b: string): boolean {
   return false;
 }
 
-export function suggestKey(needle: string, schemaKeys: string[], maxDistance: number = 3): string | undefined {
+export function suggestKey(
+  needle: string,
+  schemaKeys: string[],
+  maxDistance: number = 3,
+): string | undefined {
   const upper = needle.toUpperCase();
   if (upper.length < 2) return undefined;
 

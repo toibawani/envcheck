@@ -1,4 +1,4 @@
-import { Exit } from "./exit.ts";
+import { Exit } from './exit.ts';
 
 type Cleanup = () => void | Promise<void>;
 
@@ -21,7 +21,7 @@ export function aborted(): boolean {
 export function armSignals(): void {
   if (armed) return;
   armed = true;
-  process.on("SIGINT", () => {
+  process.on('SIGINT', () => {
     if (tripped) {
       process.exit(Exit.Interrupted);
     }

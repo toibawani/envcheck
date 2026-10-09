@@ -1,8 +1,8 @@
-import { version } from "./version.ts";
-import { c } from "./color.ts";
-import type { FileReport } from "./diff.ts";
-import { maskValue } from "./parse.ts";
-import type { LoadedEnv } from "./load.ts";
+import { version } from './version.ts';
+import { c } from './color.ts';
+import type { FileReport } from './diff.ts';
+import { maskValue } from './parse.ts';
+import type { LoadedEnv } from './load.ts';
 
 export interface RenderInput {
   root: string;
@@ -26,9 +26,9 @@ export interface RenderInput {
 
 export function renderText(input: RenderInput): string {
   const lines: string[] = [];
-  lines.push(`${c.bold("envcheck")} ${c.dim(input.root)}`);
-  lines.push(`${c.dim("schema")} ${input.schemaRel}`);
-  lines.push("");
+  lines.push(`${c.bold('envcheck')} ${c.dim(input.root)}`);
+  lines.push(`${c.dim('schema')} ${input.schemaRel}`);
+  lines.push('');
 
   let problems = 0;
   for (const { loaded, report } of input.files) {
@@ -36,57 +36,57 @@ export function renderText(input: RenderInput): string {
     if (loaded.noPairs && input.skipNoPairs) continue;
 
     if (report.ok && !loaded.emptyFile && !loaded.noPairs) {
-      lines.push(`${c.green("ok")}  ${report.path}`);
+      lines.push(`${c.green('ok')}  ${report.path}`);
       continue;
     }
-    const mark = report.ok ? c.yellow("·") : c.red("!!");
-    lines.push(
-      `${mark}  ${c.bold(report.path)}${loaded.emptyFile ? c.dim("  (0 bytes)") : ""}`,
-    );
+    const mark = report.ok ? c.yellow('·') : c.red('!!');
+    lines.push(`${mark}  ${c.bold(report.path)}${loaded.emptyFile ? c.dim('  (0 bytes)') : ''}`);
 
     if (loaded.emptyFile) {
       if (input.skipEmpty) continue;
       problems++;
-      lines.push(`    ${c.yellow("empty file")}  zero bytes, so there is nothing to compare`);
+      lines.push(`    ${c.yellow('empty file')}  zero bytes, so there is nothing to compare`);
     } else if (loaded.noPairs) {
       if (input.skipNoPairs) continue;
       problems++;
-      lines.push(`    ${c.yellow("no keys")}  file has comments or whitespace only`);
+      lines.push(`    ${c.yellow('no keys')}  file has comments or whitespace only`);
     }
 
     for (const key of report.missing) {
       problems++;
-      lines.push(`    ${c.red("missing")}  ${key}`);
+      lines.push(`    ${c.red('missing')}  ${key}`);
     }
     for (const e of report.empty) {
       problems++;
-      lines.push(`    ${c.yellow("empty")}    ${e.key}${c.dim(`:${e.line}`)}`);
+      lines.push(`    ${c.yellow('empty')}    ${e.key}${c.dim(`:${e.line}`)}`);
     }
     for (const t of report.typos) {
       problems++;
-      lines.push(`    ${c.yellow("typo")}     ${t.key} ${c.dim("→")} ${c.green(t.suggestion)}${c.dim(`:${t.line}`)}`);
+      lines.push(
+        `    ${c.yellow('typo')}     ${t.key} ${c.dim('→')} ${c.green(t.suggestion)}${c.dim(`:${t.line}`)}`,
+      );
     }
     for (const e of report.extra) {
       problems++;
       const shown = input.reveal
-        ? loaded.parsed.map.get(e.key)?.value ?? ""
-        : maskValue(loaded.parsed.map.get(e.key)?.value ?? "");
-      lines.push(`    ${c.dim("extra")}    ${e.key}${c.dim(`:${e.line}`)} ${c.dim(shown)}`);
+        ? (loaded.parsed.map.get(e.key)?.value ?? '')
+        : maskValue(loaded.parsed.map.get(e.key)?.value ?? '');
+      lines.push(`    ${c.dim('extra')}    ${e.key}${c.dim(`:${e.line}`)} ${c.dim(shown)}`);
     }
     for (const d of report.duplicates) {
       problems++;
-      lines.push(`    ${c.yellow("dup")}      ${d} ${c.dim("later assignment wins")}`);
+      lines.push(`    ${c.yellow('dup')}      ${d} ${c.dim('later assignment wins')}`);
     }
     for (const n of report.interpolated) {
-      lines.push(`    ${c.dim("interp")}   ${n.key} ${c.dim("refs")} ${n.refs.join(", ")}`);
+      lines.push(`    ${c.dim('interp')}   ${n.key} ${c.dim('refs')} ${n.refs.join(', ')}`);
     }
   }
 
-  lines.push("");
+  lines.push('');
   if (problems === 0) {
     lines.push(
       c.green(
-        `${input.files.length} file${input.files.length === 1 ? "" : "s"} match ${input.schemaRel}`,
+        `${input.files.length} file${input.files.length === 1 ? '' : 's'} match ${input.schemaRel}`,
       ),
     );
   } else {
@@ -105,15 +105,15 @@ export function renderText(input: RenderInput): string {
     if (counts.typo) parts.push(`${counts.typo} typo`);
     if (counts.extra) parts.push(`${counts.extra} extra`);
     if (counts.dup) parts.push(`${counts.dup} dup`);
-    if (counts.interpolated) parts.push(`${(counts.interpolated as number)} interpolated`);
+    if (counts.interpolated) parts.push(`${counts.interpolated as number} interpolated`);
     if (counts.other) parts.push(`${counts.other} empty-file`);
     lines.push(
-      `${c.red(String(problems))} issue${problems === 1 ? "" : "s"} across ${input.files.length} file${input.files.length === 1 ? "" : "s"}` +
-        (parts.length ? c.dim(`  (${parts.join(", ")})`) : ""),
+      `${c.red(String(problems))} issue${problems === 1 ? '' : 's'} across ${input.files.length} file${input.files.length === 1 ? '' : 's'}` +
+        (parts.length ? c.dim(`  (${parts.join(', ')})`) : ''),
     );
-    lines.push(c.dim("next: envcheck fix"));
+    lines.push(c.dim('next: envcheck fix'));
   }
-  return lines.join("\n") + "\n";
+  return lines.join('\n') + '\n';
 }
 
 export function renderJson(input: RenderInput): string {
@@ -129,8 +129,8 @@ export function renderJson(input: RenderInput): string {
       key: e.key,
       line: e.line,
       value: input.reveal
-        ? loaded.parsed.map.get(e.key)?.value ?? ""
-        : maskValue(loaded.parsed.map.get(e.key)?.value ?? ""),
+        ? (loaded.parsed.map.get(e.key)?.value ?? '')
+        : maskValue(loaded.parsed.map.get(e.key)?.value ?? ''),
     })),
     typos: report.typos,
     interpolated: report.interpolated,
@@ -151,7 +151,18 @@ export function renderJson(input: RenderInput): string {
     summary.duplicates +
     files.reduce((n, f) => n + (f.emptyFile || f.noPairs ? 1 : 0), 0);
   return (
-    JSON.stringify({ version: version(), schema: input.schemaRel, files, summary, issueCount, ok: issueCount === 0, exitCode: input.exitCode ?? (issueCount === 0 ? 0 : 1) }, null, 2) +
-    "\n"
+    JSON.stringify(
+      {
+        version: version(),
+        schema: input.schemaRel,
+        files,
+        summary,
+        issueCount,
+        ok: issueCount === 0,
+        exitCode: input.exitCode ?? (issueCount === 0 ? 0 : 1),
+      },
+      null,
+      2,
+    ) + '\n'
   );
 }

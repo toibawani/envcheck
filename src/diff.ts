@@ -1,5 +1,5 @@
-import type { EnvEntry, ParseResult } from "./parse.ts";
-import { suggestKey } from "./distance.ts";
+import type { EnvEntry, ParseResult } from './parse.ts';
+import { suggestKey } from './distance.ts';
 
 export interface TypoHit {
   key: string;
@@ -27,10 +27,10 @@ export function diffFile(
   const schemaKeys = [...schema.map.keys()];
   const schemaSet = new Set(schemaKeys);
   const missing: string[] = [];
-  const empty: FileReport["empty"] = [];
-  const extra: FileReport["extra"] = [];
+  const empty: FileReport['empty'] = [];
+  const extra: FileReport['extra'] = [];
   const typos: TypoHit[] = [];
-  const interpolated: FileReport["interpolated"] = [];
+  const interpolated: FileReport['interpolated'] = [];
 
   for (const key of schemaKeys) {
     const got = parsed.map.get(key);

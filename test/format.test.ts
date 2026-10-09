@@ -1,11 +1,11 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { renderText, renderJson } from "../src/format.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { renderText, renderJson } from '../src/format.ts';
 
-test("renderText shows ok for matching files", () => {
+test('renderText shows ok for matching files', () => {
   const input = {
-    root: "/test",
-    schemaRel: ".env.example",
+    root: '/test',
+    schemaRel: '.env.example',
     reveal: false,
     skipEmpty: false,
     skipNoPairs: false,
@@ -20,7 +20,7 @@ test("renderText shows ok for matching files", () => {
           parsed: { entries: [], map: new Map(), duplicates: [], comments: new Map() },
         },
         report: {
-          path: ".env",
+          path: '.env',
           ok: true,
           missing: [],
           empty: [],
@@ -33,14 +33,14 @@ test("renderText shows ok for matching files", () => {
     ],
   } as unknown as Parameters<typeof renderText>[0];
   const text = renderText(input);
-  assert.ok(text.includes("ok"));
-  assert.ok(text.includes(".env"));
+  assert.ok(text.includes('ok'));
+  assert.ok(text.includes('.env'));
 });
 
-test("renderText shows issues for drift", () => {
+test('renderText shows issues for drift', () => {
   const input = {
-    root: "/test",
-    schemaRel: ".env.example",
+    root: '/test',
+    schemaRel: '.env.example',
     reveal: false,
     skipEmpty: false,
     skipNoPairs: false,
@@ -55,9 +55,9 @@ test("renderText shows issues for drift", () => {
           parsed: { entries: [], map: new Map(), duplicates: [], comments: new Map() },
         },
         report: {
-          path: ".env",
+          path: '.env',
           ok: false,
-          missing: ["MISSING_KEY"],
+          missing: ['MISSING_KEY'],
           empty: [],
           extra: [],
           typos: [],
@@ -68,14 +68,14 @@ test("renderText shows issues for drift", () => {
     ],
   } as unknown as Parameters<typeof renderText>[0];
   const text = renderText(input);
-  assert.ok(text.includes("missing"));
-  assert.ok(text.includes("MISSING_KEY"));
+  assert.ok(text.includes('missing'));
+  assert.ok(text.includes('MISSING_KEY'));
 });
 
-test("renderText shows stats when provided", () => {
+test('renderText shows stats when provided', () => {
   const input = {
-    root: "/test",
-    schemaRel: ".env.example",
+    root: '/test',
+    schemaRel: '.env.example',
     reveal: false,
     skipEmpty: false,
     skipNoPairs: false,
@@ -91,9 +91,9 @@ test("renderText shows stats when provided", () => {
           parsed: { entries: [], map: new Map(), duplicates: [], comments: new Map() },
         },
         report: {
-          path: ".env",
+          path: '.env',
           ok: false,
-          missing: ["MISSING_KEY"],
+          missing: ['MISSING_KEY'],
           empty: [],
           extra: [],
           typos: [],
@@ -104,13 +104,13 @@ test("renderText shows stats when provided", () => {
     ],
   } as unknown as Parameters<typeof renderText>[0];
   const text = renderText(input);
-  assert.ok(text.includes("1 missing"));
+  assert.ok(text.includes('1 missing'));
 });
 
-test("renderJson returns valid JSON with summary", () => {
+test('renderJson returns valid JSON with summary', () => {
   const input = {
-    root: "/test",
-    schemaRel: ".env.example",
+    root: '/test',
+    schemaRel: '.env.example',
     reveal: false,
     skipEmpty: false,
     skipNoPairs: false,
@@ -125,9 +125,9 @@ test("renderJson returns valid JSON with summary", () => {
           parsed: { entries: [], map: new Map(), duplicates: [], comments: new Map() },
         },
         report: {
-          path: ".env",
+          path: '.env',
           ok: false,
-          missing: ["MISSING_KEY"],
+          missing: ['MISSING_KEY'],
           empty: [],
           extra: [],
           typos: [],

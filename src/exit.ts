@@ -16,16 +16,16 @@ export const Exit = {
 export type ExitCode = (typeof Exit)[keyof typeof Exit];
 
 export const EXIT_TABLE: ReadonlyArray<{ code: ExitCode; label: string }> = [
-  { code: Exit.Ok, label: "clean — every scanned file matches the schema" },
-  { code: Exit.Drift, label: "drift — missing, empty, extra, typo, or dup keys" },
-  { code: Exit.Usage, label: "usage — bad flags, or fix with no TTY" },
-  { code: Exit.NotFound, label: "not found — no .env files, or no schema" },
-  { code: Exit.Unreadable, label: "unreadable — permission, binary, or bad syntax" },
-  { code: Exit.Config, label: "config — .envcheckrc is not valid JSON" },
-  { code: Exit.Interrupted, label: "interrupted — SIGINT; no partial write left" },
-  { code: Exit.Locked, label: "locked — target changed under us, or busy" },
+  { code: Exit.Ok, label: 'clean — every scanned file matches the schema' },
+  { code: Exit.Drift, label: 'drift — missing, empty, extra, typo, or dup keys' },
+  { code: Exit.Usage, label: 'usage — bad flags, or fix with no TTY' },
+  { code: Exit.NotFound, label: 'not found — no .env files, or no schema' },
+  { code: Exit.Unreadable, label: 'unreadable — permission, binary, or bad syntax' },
+  { code: Exit.Config, label: 'config — .envcheckrc is not valid JSON' },
+  { code: Exit.Interrupted, label: 'interrupted — SIGINT; no partial write left' },
+  { code: Exit.Locked, label: 'locked — target changed under us, or busy' },
 ];
 
 export function formatExitTable(): string {
-  return EXIT_TABLE.map((row) => `  ${row.code}  ${row.label}`).join("\n");
+  return EXIT_TABLE.map((row) => `  ${row.code}  ${row.label}`).join('\n');
 }

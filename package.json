@@ -1,7 +1,7 @@
 {
   "name": "envcheck",
   "version": "0.3.0",
-  "description": "Compare .env files against a schema of record. Catch missing keys, empty values, orphans, and typos \u2014 and scaffold a schema with envcheck init.",
+  "description": "Compare .env files against a schema of record. Catch missing keys, empty values, orphans, and typos — and scaffold a schema with envcheck init.",
   "type": "module",
   "bin": {
     "envcheck": "./dist/cli.js"
@@ -49,6 +49,7 @@
   ],
   "devDependencies": {
     "@types/node": "^22.15.21",
+    "prettier": "^3.9.9",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   }

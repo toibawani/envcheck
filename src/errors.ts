@@ -1,5 +1,5 @@
-import { Exit } from "./exit.ts";
-import type { ExitCode } from "./exit.ts";
+import { Exit } from './exit.ts';
+import type { ExitCode } from './exit.ts';
 
 /** Base class for every user-facing failure. Carries what, why, and the next command. */
 export class EnvcheckError extends Error {
@@ -10,7 +10,7 @@ export class EnvcheckError extends Error {
 
   constructor(exitCode: ExitCode, what: string, why: string, fix: string) {
     super(what);
-    this.name = "EnvcheckError";
+    this.name = 'EnvcheckError';
     this.exitCode = exitCode;
     this.what = what;
     this.why = why;
@@ -59,7 +59,7 @@ export class ConfigError extends EnvcheckError {
 /** The run was interrupted (SIGINT); no partial write was left behind. */
 export class InterruptedError extends EnvcheckError {
   constructor() {
-    super(Exit.Interrupted, "Interrupted.", "No changes were written.", "envcheck check");
+    super(Exit.Interrupted, 'Interrupted.', 'No changes were written.', 'envcheck check');
   }
 }
 

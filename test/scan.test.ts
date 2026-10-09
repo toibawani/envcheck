@@ -1,84 +1,84 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { scanEnvFiles, isEnvFileName } from "../src/scan.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { scanEnvFiles, isEnvFileName } from '../src/scan.ts';
 
-test("isEnvFileName identifies .env files", () => {
-  assert.equal(isEnvFileName(".env"), true);
-  assert.equal(isEnvFileName(".env.example"), true);
-  assert.equal(isEnvFileName(".env.local"), true);
-  assert.equal(isEnvFileName(".envrc"), false);
-  assert.equal(isEnvFileName(".env.example.bak"), true);
+test('isEnvFileName identifies .env files', () => {
+  assert.equal(isEnvFileName('.env'), true);
+  assert.equal(isEnvFileName('.env.example'), true);
+  assert.equal(isEnvFileName('.env.local'), true);
+  assert.equal(isEnvFileName('.envrc'), false);
+  assert.equal(isEnvFileName('.env.example.bak'), true);
 });
 
-test("scan finds .env files in a directory", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan finds .env files in a directory', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    writeFileSync(join(dir, ".env.example"), "B=2\n");
-    writeFileSync(join(dir, "notes.txt"), "not env\n");
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    writeFileSync(join(dir, '.env.example'), 'B=2\n');
+    writeFileSync(join(dir, 'notes.txt'), 'not env\n');
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
-    assert.deepEqual(names, [".env", ".env.example"]);
+    assert.deepEqual(names, ['.env', '.env.example']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan respects .gitignore", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan respects .gitignore', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".gitignore"), ".env\n.env.local\n");
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    writeFileSync(join(dir, ".env.local"), "B=2\n");
-    writeFileSync(join(dir, ".env.example"), "C=3\n");
+    writeFileSync(join(dir, '.gitignore'), '.env\n.env.local\n');
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    writeFileSync(join(dir, '.env.local'), 'B=2\n');
+    writeFileSync(join(dir, '.env.example'), 'C=3\n');
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
-    assert.deepEqual(names, [".env.example"]);
+    assert.deepEqual(names, ['.env.example']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan respects .envcheckignore", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan respects .envcheckignore', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".envcheckignore"), ".env.private\n");
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    writeFileSync(join(dir, ".env.private"), "B=2\n");
-    writeFileSync(join(dir, ".env.example"), "C=3\n");
+    writeFileSync(join(dir, '.envcheckignore'), '.env.private\n');
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    writeFileSync(join(dir, '.env.private'), 'B=2\n');
+    writeFileSync(join(dir, '.env.example'), 'C=3\n');
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
     // alphabetically sorted: .env before .env.example
-    assert.deepEqual(names, [".env", ".env.example"]);
+    assert.deepEqual(names, ['.env', '.env.example']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan honors gitignore negation", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan honors gitignore negation', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".gitignore"), ".env\n!.env.example\n");
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    writeFileSync(join(dir, ".env.example"), "B=2\n");
+    writeFileSync(join(dir, '.gitignore'), '.env\n!.env.example\n');
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    writeFileSync(join(dir, '.env.example'), 'B=2\n');
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
     // .env is ignored by .gitignore; only .env.example (negated) is included
-    assert.deepEqual(names, [".env.example"]);
+    assert.deepEqual(names, ['.env.example']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan does not loop on symlink cycles", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan does not loop on symlink cycles', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".env.example"), "A=1\n");
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    const sub = join(dir, "loop");
+    writeFileSync(join(dir, '.env.example'), 'A=1\n');
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    const sub = join(dir, 'loop');
     mkdirSync(sub);
     try {
       // symlink back to root should be treated as a cycle and skipped
@@ -89,58 +89,58 @@ test("scan does not loop on symlink cycles", () => {
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
     // At minimum, we shouldn't crash and should find the .env files
-    assert.ok(names.includes(".env.example") || names.includes(".env"));
+    assert.ok(names.includes('.env.example') || names.includes('.env'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan skips non-env files", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan skips non-env files', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(dir, ".env"), "A=1\n");
-    writeFileSync(join(dir, "config.json"), '{"key":"value"}\n');
-    writeFileSync(join(dir, ".env.production"), "B=2\n");
+    writeFileSync(join(dir, '.env'), 'A=1\n');
+    writeFileSync(join(dir, 'config.json'), '{"key":"value"}\n');
+    writeFileSync(join(dir, '.env.production'), 'B=2\n');
     const found = scanEnvFiles({ root: dir, extraIgnore: [] });
     const names = found.map((f) => f.name).sort();
-    assert.deepEqual(names, [".env", ".env.production"]);
+    assert.deepEqual(names, ['.env', '.env.production']);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("scan returns rel paths with forward slashes", () => {
-  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan returns rel paths with forward slashes', () => {
+  const root = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    const sub = join(root, "sub");
+    const sub = join(root, 'sub');
     mkdirSync(sub, { recursive: true });
-    writeFileSync(join(sub, ".env.local"), "A=1\n", "utf8");
+    writeFileSync(join(sub, '.env.local'), 'A=1\n', 'utf8');
     const files = scanEnvFiles({ root, extraIgnore: [] });
-    assert.ok(files.at(0)?.rel.includes("/"), "rel uses forward slashes");
+    assert.ok(files.at(0)?.rel.includes('/'), 'rel uses forward slashes');
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });
 
-test("scan includes .env.template in discovery", () => {
-  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan includes .env.template in discovery', () => {
+  const root = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(root, ".env.template"), "A=1\n", "utf8");
+    writeFileSync(join(root, '.env.template'), 'A=1\n', 'utf8');
     const files = scanEnvFiles({ root, extraIgnore: [] });
     const names = files.map((f) => f.name);
-    assert.ok(names.includes(".env.template"));
+    assert.ok(names.includes('.env.template'));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });
 
-test("scan does not treat .envcheckignore as an env file", () => {
-  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+test('scan does not treat .envcheckignore as an env file', () => {
+  const root = mkdtempSync(join(tmpdir(), 'envcheck-scan-'));
   try {
-    writeFileSync(join(root, ".envcheckignore"), "*.local\n", "utf8");
+    writeFileSync(join(root, '.envcheckignore'), '*.local\n', 'utf8');
     const files = scanEnvFiles({ root, extraIgnore: [] });
     const names = files.map((f) => f.name);
-    assert.ok(!names.includes(".envcheckignore"));
+    assert.ok(!names.includes('.envcheckignore'));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

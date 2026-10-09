@@ -1,14 +1,14 @@
-import { argv, exit, stderr, stdout } from "node:process";
-import { resolve } from "node:path";
-import { configureColor, c } from "./color.ts";
-import { isEnvcheckError } from "./errors.ts";
-import { Exit, formatExitTable } from "./exit.ts";
-import { armSignals } from "./signals.ts";
-import { version } from "./version.ts";
-import { runCheck, runFix } from "./run.ts";
-import { runInit } from "./init.ts";
-import { runDoctor } from "./doctor.ts";
-import { diagnose } from "./diagnose.ts";
+import { argv, exit, stderr, stdout } from 'node:process';
+import { resolve } from 'node:path';
+import { configureColor, c } from './color.ts';
+import { isEnvcheckError } from './errors.ts';
+import { Exit, formatExitTable } from './exit.ts';
+import { armSignals } from './signals.ts';
+import { version } from './version.ts';
+import { runCheck, runFix } from './run.ts';
+import { runInit } from './init.ts';
+import { runDoctor } from './doctor.ts';
+import { diagnose } from './diagnose.ts';
 
 const HELP = `envcheck — compare .env files to a schema of record
 
@@ -77,8 +77,8 @@ interface Parsed {
 
 function parseArgs(args: string[]): Parsed {
   const out: Parsed = {
-    command: "check",
-    dir: ".",
+    command: 'check',
+    dir: '.',
     ignore: [],
     reveal: false,
     json: false,
@@ -97,49 +97,57 @@ function parseArgs(args: string[]): Parsed {
   const positional: string[] = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i]!;
-    if (a === "--help" || a === "-h") out.help = true;
-    else if (a === "--version" || a === "-v") out.version = true;
-    else if (a === "--stats") out.stats = true;
-    else if (a === "--skip-empty") out.skipEmpty = true;
-    else if (a === "--skip-no-pairs") out.skipNoPairs = true;
-    else if (a === "--json") out.json = true;
-    else if (a === "--diagnose") out.diagnose = true;
-    else if (a === "--reveal") out.reveal = true;
-    else if (a === "--force") out.force = true;
-    else if (a === "--dry-run") out.dryRun = true;
-    else if (a === "--fail-on") {
-      const raw = need(args, ++i, "--fail-on");
-      for (const part of raw.split(",")) {
+    if (a === '--help' || a === '-h') out.help = true;
+    else if (a === '--version' || a === '-v') out.version = true;
+    else if (a === '--stats') out.stats = true;
+    else if (a === '--skip-empty') out.skipEmpty = true;
+    else if (a === '--skip-no-pairs') out.skipNoPairs = true;
+    else if (a === '--json') out.json = true;
+    else if (a === '--diagnose') out.diagnose = true;
+    else if (a === '--reveal') out.reveal = true;
+    else if (a === '--force') out.force = true;
+    else if (a === '--dry-run') out.dryRun = true;
+    else if (a === '--fail-on') {
+      const raw = need(args, ++i, '--fail-on');
+      for (const part of raw.split(',')) {
         const p = part.trim().toLowerCase();
         if (p) out.failOn.push(p);
       }
-    }
-    else if (a === "--no-color") out.noColor = true;
-    else if (a === "--verbose") out.verbose = true;
-    else if (a === "--schema") out.schema = need(args, ++i, "--schema");
-    else if (a === "--ignore") out.ignore.push(need(args, ++i, "--ignore"));
-    else if (a === "--max-distance") out.maxDistance = Number(need(args, ++i, "--max-distance"));
-    else if (a.startsWith("-")) {
+    } else if (a === '--no-color') out.noColor = true;
+    else if (a === '--verbose') out.verbose = true;
+    else if (a === '--schema') out.schema = need(args, ++i, '--schema');
+    else if (a === '--ignore') out.ignore.push(need(args, ++i, '--ignore'));
+    else if (a === '--max-distance') out.maxDistance = Number(need(args, ++i, '--max-distance'));
+    else if (a.startsWith('-')) {
       failUsage(`Unknown flag ${a}.`, `envcheck --help`);
     } else positional.push(a);
   }
-  if (positional[0] && ["check", "fix", "init", "about", "doctor", "diagnose"].includes(positional[0])) {
+  if (
+    positional[0] &&
+    ['check', 'fix', 'init', 'about', 'doctor', 'diagnose'].includes(positional[0])
+  ) {
     out.command = positional[0];
-    if (positional[0] !== "diagnose" && positional[1]) out.dir = positional[1];
-    if (positional.length > 2) failUsage(`Unexpected argument ${positional[2]}.`, "envcheck --help");
+    if (positional[0] !== 'diagnose' && positional[1]) out.dir = positional[1];
+    if (positional.length > 2)
+      failUsage(`Unexpected argument ${positional[2]}.`, 'envcheck --help');
   } else if (positional[0]) {
     out.dir = positional[0];
-    if (positional.length > 1) failUsage(`Unexpected argument ${positional[1]}.`, "envcheck --help");
+    if (positional.length > 1)
+      failUsage(`Unexpected argument ${positional[1]}.`, 'envcheck --help');
   }
-  if (out.maxDistance !== undefined && (!Number.isInteger(out.maxDistance) || out.maxDistance < 0)) {
-    failUsage("--max-distance must be a non-negative integer.", "envcheck check --max-distance 3");
+  if (
+    out.maxDistance !== undefined &&
+    (!Number.isInteger(out.maxDistance) || out.maxDistance < 0)
+  ) {
+    failUsage('--max-distance must be a non-negative integer.', 'envcheck check --max-distance 3');
   }
   return out;
 }
 
 function need(args: string[], i: number, flag: string): string {
   const v = args[i];
-  if (!v || v.startsWith("-")) failUsage(`${flag} needs a value.`, `envcheck check ${flag} <value>`);
+  if (!v || v.startsWith('-'))
+    failUsage(`${flag} needs a value.`, `envcheck check ${flag} <value>`);
   return v;
 }
 
@@ -154,24 +162,24 @@ async function main(): Promise<void> {
   configureColor({ noColorFlag: parsed.noColor, json: parsed.json });
 
   if (parsed.version) {
-    stdout.write(version() + "\n");
+    stdout.write(version() + '\n');
     return;
   }
   if (parsed.help) {
     stdout.write(commandHelp(parsed.command));
     return;
   }
-  if (parsed.command === "about") {
+  if (parsed.command === 'about') {
     stdout.write(aboutText());
     return;
   }
 
-  const failOnAllowed = new Set(["missing", "empty", "extra", "typo", "dup"]);
+  const failOnAllowed = new Set(['missing', 'empty', 'extra', 'typo', 'dup']);
   for (const k of parsed.failOn) {
     if (!failOnAllowed.has(k)) {
       failUsage(
         `Unknown --fail-on kind "${k}".`,
-        "envcheck check --fail-on missing,empty,extra,typo,dup",
+        'envcheck check --fail-on missing,empty,extra,typo,dup',
       );
     }
   }
@@ -186,16 +194,16 @@ async function main(): Promise<void> {
     stats: parsed.stats,
     skipEmpty: parsed.skipEmpty,
     skipNoPairs: parsed.skipNoPairs,
-    failOn: parsed.failOn as import("./run.ts").FailOnKind[],
+    failOn: parsed.failOn as import('./run.ts').FailOnKind[],
   };
 
-  if (parsed.command === "fix") {
+  if (parsed.command === 'fix') {
     const outcome = await runFix(flags);
     stdout.write(outcome.text);
     exit(outcome.exitCode);
   }
 
-  if (parsed.command === "init") {
+  if (parsed.command === 'init') {
     const outcome = runInit({
       cwd: flags.cwd,
       schema: flags.schema,
@@ -207,7 +215,7 @@ async function main(): Promise<void> {
     exit(outcome.exitCode);
   }
 
-  if (parsed.command === "doctor") {
+  if (parsed.command === 'doctor') {
     const outcome = runDoctor({
       cwd: flags.cwd,
       schema: flags.schema,
@@ -217,9 +225,9 @@ async function main(): Promise<void> {
     exit(outcome.exitCode);
   }
 
-  if (parsed.command === "diagnose") {
+  if (parsed.command === 'diagnose') {
     const report = diagnose(flags.cwd);
-    stdout.write(JSON.stringify(report, null, 2) + "\n");
+    stdout.write(JSON.stringify(report, null, 2) + '\n');
     exit(report.issues.length ? Exit.Drift : Exit.Ok);
   }
 
@@ -229,7 +237,7 @@ async function main(): Promise<void> {
 }
 
 function commandHelp(command: string): string {
-  if (command === "fix") {
+  if (command === 'fix') {
     return `envcheck fix — fill missing keys and drop orphans, with a preview
 
 usage
@@ -241,7 +249,7 @@ stdin is not a TTY (CI, pipes) so it cannot hang waiting for input.
 author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
 `;
   }
-  if (command === "init") {
+  if (command === 'init') {
     return `envcheck init — create a schema from existing .env keys
 
 usage
@@ -255,7 +263,7 @@ Refuses to overwrite unless --force is passed.
 author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
 `;
   }
-  if (command === "doctor") {
+  if (command === 'doctor') {
     return `envcheck doctor — verify environment and schema setup
 
 usage
@@ -267,7 +275,7 @@ Author and exit codes are covered by envcheck about.
 author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
 `;
   }
-  if (command === "about") {
+  if (command === 'about') {
     return `envcheck about — version and credits
 
 usage
@@ -277,7 +285,7 @@ prints the version baked in at build time, plus
 https://github.com/toibawani and toibawani14@gmail.com
 `;
   }
-  if (command === "check") {
+  if (command === 'check') {
     return `envcheck check — report drift against the schema
 
 usage
@@ -303,28 +311,30 @@ exit  0 match  1 drift  3 nothing to scan  4 bad file  5 bad .envcheckrc
 
 function aboutText(): string {
   return [
-    `${c.bold("envcheck")} ${version()}`,
-    "Toiba  https://github.com/toibawani",
-    "toibawani14@gmail.com",
-    "",
-    "A schema-of-record check for .env files.",
-    "Repo: https://github.com/toibawani/envcheck",
-    "",
-    "exit codes",
+    `${c.bold('envcheck')} ${version()}`,
+    'Toiba  https://github.com/toibawani',
+    'toibawani14@gmail.com',
+    '',
+    'A schema-of-record check for .env files.',
+    'Repo: https://github.com/toibawani/envcheck',
+    '',
+    'exit codes',
     formatExitTable(),
-    "",
-  ].join("\n");
+    '',
+  ].join('\n');
 }
 
 main().catch((err: unknown) => {
-  const verbose = argv.includes("--verbose");
+  const verbose = argv.includes('--verbose');
   if (isEnvcheckError(err)) {
     stderr.write(`${err.what}\nWhy: ${err.why}\nFix: ${err.fix}\n`);
-    if (verbose && err.stack) stderr.write(c.dim(err.stack) + "\n");
+    if (verbose && err.stack) stderr.write(c.dim(err.stack) + '\n');
     exit(err.exitCode);
   }
   const message = err instanceof Error ? err.message : String(err);
-  stderr.write(`envcheck hit an unexpected error.\nWhy: ${message}\nFix: re-run with --verbose and open an issue at https://github.com/toibawani/envcheck/issues\n`);
-  if (verbose && err instanceof Error && err.stack) stderr.write(err.stack + "\n");
+  stderr.write(
+    `envcheck hit an unexpected error.\nWhy: ${message}\nFix: re-run with --verbose and open an issue at https://github.com/toibawani/envcheck/issues\n`,
+  );
+  if (verbose && err instanceof Error && err.stack) stderr.write(err.stack + '\n');
   exit(Exit.Unreadable);
 });

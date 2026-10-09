@@ -1,19 +1,19 @@
-import { resolve, isAbsolute, basename } from "node:path";
-import { existsSync } from "node:fs";
-import { isatty } from "node:tty";
-import { loadConfig, type ResolvedConfig } from "./config.ts";
-import { scanEnvFiles, defaultSchemaRel, type FoundFile } from "./scan.ts";
-import { loadEnvFile, type LoadedEnv } from "./load.ts";
-import { diffFile, type FileReport } from "./diff.ts";
-import { renderJson, renderText, type RenderInput } from "./format.ts";
-import { EnvcheckError } from "./errors.ts";
-import { Exit } from "./exit.ts";
-import { c } from "./color.ts";
-import { fixFile } from "./fix.ts";
-import { assertInteractive } from "./prompt.ts";
-import type { ParseResult } from "./parse.ts";
+import { resolve, isAbsolute, basename } from 'node:path';
+import { existsSync } from 'node:fs';
+import { isatty } from 'node:tty';
+import { loadConfig, type ResolvedConfig } from './config.ts';
+import { scanEnvFiles, defaultSchemaRel, type FoundFile } from './scan.ts';
+import { loadEnvFile, type LoadedEnv } from './load.ts';
+import { diffFile, type FileReport } from './diff.ts';
+import { renderJson, renderText, type RenderInput } from './format.ts';
+import { EnvcheckError } from './errors.ts';
+import { Exit } from './exit.ts';
+import { c } from './color.ts';
+import { fixFile } from './fix.ts';
+import { assertInteractive } from './prompt.ts';
+import type { ParseResult } from './parse.ts';
 
-export type FailOnKind = "missing" | "empty" | "extra" | "typo" | "dup";
+export type FailOnKind = 'missing' | 'empty' | 'extra' | 'typo' | 'dup';
 
 export interface CheckFlags {
   cwd: string;
@@ -113,7 +113,7 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
 }
 
 function hasDrift(
-  files: { loaded: LoadedEnv; report: import("./diff.ts").FileReport }[],
+  files: { loaded: LoadedEnv; report: import('./diff.ts').FileReport }[],
   kinds: Set<FailOnKind> | null,
 ): boolean {
   for (const { loaded, report } of files) {
@@ -121,11 +121,12 @@ function hasDrift(
       if (!report.ok || loaded.emptyFile || loaded.noPairs) return true;
       continue;
     }
-    if (kinds.has("missing") && report.missing.length) return true;
-    if (kinds.has("empty") && (report.empty.length || loaded.emptyFile || loaded.noPairs)) return true;
-    if (kinds.has("extra") && report.extra.length) return true;
-    if (kinds.has("typo") && report.typos.length) return true;
-    if (kinds.has("dup") && report.duplicates.length) return true;
+    if (kinds.has('missing') && report.missing.length) return true;
+    if (kinds.has('empty') && (report.empty.length || loaded.emptyFile || loaded.noPairs))
+      return true;
+    if (kinds.has('extra') && report.extra.length) return true;
+    if (kinds.has('typo') && report.typos.length) return true;
+    if (kinds.has('dup') && report.duplicates.length) return true;
   }
   return false;
 }
@@ -137,8 +138,8 @@ export async function runFix(flags: CheckFlags): Promise<CheckOutcome> {
   let skipped = 0;
   for (const loaded of compared) {
     const result = await fixFile(loaded, loadedSchema.parsed, flags.maxDistance ?? 3, flags.reveal);
-    if (result === "changed") changed++;
-    if (result === "skipped") skipped++;
+    if (result === 'changed') changed++;
+    if (result === 'skipped') skipped++;
   }
   const text = `${c.green(String(changed))} updated, ${c.dim(String(skipped))} skipped\n`;
   return { exitCode: Exit.Ok, text };
@@ -156,7 +157,7 @@ function collect(flags: CheckFlags): {
   const ignore = [...config.ignore, ...flags.ignore];
   const maxDistance = flags.maxDistance ?? config.maxDistance;
 
-  const spinner = startSpinner("scanning");
+  const spinner = startSpinner('scanning');
   let files: FoundFile[];
   try {
     files = scanEnvFiles({ root, extraIgnore: ignore });
@@ -167,16 +168,16 @@ function collect(flags: CheckFlags): {
   if (files.length === 0) {
     throw new EnvcheckError(
       Exit.NotFound,
-      "No .env files found.",
+      'No .env files found.',
       `Walked ${root} and every .env* file was either absent or excluded by .gitignore / .envcheckignore.`,
-      "touch .env.example && envcheck check",
+      'touch .env.example && envcheck check',
     );
   }
 
   const schemaArg = flags.schema ?? config.schema;
   const schemaRel = resolveSchema(root, files, schemaArg);
   const schemaFile = files.find((f) => f.rel === schemaRel) ?? {
-    abs: isAbsolute(schemaArg ?? "") ? schemaArg! : resolve(root, schemaRel),
+    abs: isAbsolute(schemaArg ?? '') ? schemaArg! : resolve(root, schemaRel),
     rel: schemaRel,
     name: basename(schemaRel),
   };
@@ -184,8 +185,8 @@ function collect(flags: CheckFlags): {
     throw new EnvcheckError(
       Exit.NotFound,
       `Schema file ${schemaRel} does not exist.`,
-      "envcheck treats the schema as the list of keys that must exist. Without it there is nothing to diff against.",
-      "envcheck check --schema .env.example",
+      'envcheck treats the schema as the list of keys that must exist. Without it there is nothing to diff against.',
+      'envcheck check --schema .env.example',
     );
   }
 
@@ -195,8 +196,8 @@ function collect(flags: CheckFlags): {
       Exit.NotFound,
       `${schemaRel} has no keys.`,
       loadedSchema.emptyFile
-        ? "The schema file is zero bytes."
-        : "The schema file has comments or blank lines only, so it cannot define a contract.",
+        ? 'The schema file is zero bytes.'
+        : 'The schema file has comments or blank lines only, so it cannot define a contract.',
       `Add KEY=value lines to ${schemaRel} and re-run envcheck check`,
     );
   }
@@ -205,21 +206,18 @@ function collect(flags: CheckFlags): {
     .filter(
       (f) =>
         f.rel !== schemaRel &&
-        ![
-          defaultSchemaRel(files) ?? "",
-          ".env.example",
-          ".env.sample",
-          ".env.template",
-        ].includes(f.rel),
+        ![defaultSchemaRel(files) ?? '', '.env.example', '.env.sample', '.env.template'].includes(
+          f.rel,
+        ),
     )
     .map((f) => loadEnvFile(f.abs, f.rel));
 
   if (compared.length === 0) {
     throw new EnvcheckError(
       Exit.NotFound,
-      "Schema found, but no other .env files to compare.",
+      'Schema found, but no other .env files to compare.',
       `${schemaRel} is the only env file visible to the scan. Secrets files are often gitignored — that is respected on purpose.`,
-      "cp .env.example .env && envcheck check",
+      'cp .env.example .env && envcheck check',
     );
   }
 
@@ -233,9 +231,9 @@ function resolveSchema(root: string, files: FoundFile[], schemaArg: string | und
     if (!found) {
       throw new EnvcheckError(
         Exit.NotFound,
-        "No schema file found.",
-        "Looked for .env.example, .env.sample, and .env.template, and .envcheckrc did not set \"schema\".",
-        "envcheck check --schema .env.example",
+        'No schema file found.',
+        'Looked for .env.example, .env.sample, and .env.template, and .envcheckrc did not set "schema".',
+        'envcheck check --schema .env.example',
       );
     }
     return found;
@@ -244,12 +242,12 @@ function resolveSchema(root: string, files: FoundFile[], schemaArg: string | und
     const hit = files.find((f) => f.abs === schemaArg);
     return hit ? hit.rel : schemaArg;
   }
-  const rel = schemaArg.replace(/^\.\//, "");
+  const rel = schemaArg.replace(/^\.\//, '');
   if (!existsSync(resolve(root, rel))) {
     throw new EnvcheckError(
       Exit.NotFound,
       `Schema file ${rel} does not exist.`,
-      "The --schema path (or .envcheckrc schema) does not point at a file.",
+      'The --schema path (or .envcheckrc schema) does not point at a file.',
       `envcheck check --schema .env.example`,
     );
   }
@@ -259,7 +257,7 @@ function resolveSchema(root: string, files: FoundFile[], schemaArg: string | und
 function startSpinner(label: string): { stop: () => void } {
   if (!isatty(2)) return { stop() {} };
   let started = false;
-  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+  const frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
   let i = 0;
   let timer: NodeJS.Timeout | undefined;
   const arm = setTimeout(() => {
@@ -272,7 +270,7 @@ function startSpinner(label: string): { stop: () => void } {
     stop() {
       clearTimeout(arm);
       if (timer) clearInterval(timer);
-      if (started) process.stderr.write("\r\x1b[2K");
+      if (started) process.stderr.write('\r\x1b[2K');
     },
   };
 }

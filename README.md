@@ -40,32 +40,32 @@ node dist/cli.js check
 
 ## Commands
 
-| Command | What it does |
-| --- | --- |
-| `envcheck check [dir]` | Scan and report. Exit 1 if anything drifted. |
-| `envcheck fix [dir]` | Prompt for missing keys, offer to drop orphans, preview, then write. |
-| `envcheck init [dir]` | Build `.env.example` from keys already in your `.env` files (never copies secrets). |
+| Command                 | What it does                                                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------- |
+| `envcheck check [dir]`  | Scan and report. Exit 1 if anything drifted.                                                |
+| `envcheck fix [dir]`    | Prompt for missing keys, offer to drop orphans, preview, then write.                        |
+| `envcheck init [dir]`   | Build `.env.example` from keys already in your `.env` files (never copies secrets).         |
 | `envcheck doctor [dir]` | Verify environment and schema setup — prints version, repository, and configuration checks. |
-| `envcheck about` | Version, author, exit codes. |
-| `envcheck --help` | Help for the command in front of the flag. |
-| `envcheck --version` | Version inlined from `package.json` at build time. |
+| `envcheck about`        | Version, author, exit codes.                                                                |
+| `envcheck --help`       | Help for the command in front of the flag.                                                  |
+| `envcheck --version`    | Version inlined from `package.json` at build time.                                          |
 
 ### Flags
 
-| Flag | |
-| --- | --- |
-| `--schema <file>` | Contract file. Default: `.env.example`, then `.env.sample`, then `.env.template`. |
-| `--ignore <glob>` | Extra ignore. Repeatable. Also reads `.gitignore` and `.envcheckignore`. |
-| `--max-distance <n>` | Typo cutoff. Default 3. |
-| `--reveal` | Print values. Default masks to the first and last two characters. |
-| `--json` | JSON on stdout. No color, no spinner. Includes a `summary` object. |
-| `--force` | Allow `init` to overwrite an existing schema. |
-| `--stats` | Aggregate issue counts in the final summary line. |
-| `--skip-empty` | Skip files that are completely empty. |
-| `--skip-no-pairs` | Skip files containing only comments or whitespace. |
-| `--max-distance <n>` | Typo cutoff (Levenshtein distance). Default 3. |
-| `--no-color` | Disable ANSI. Also honored: `NO_COLOR`, non-TTY. |
-| `--verbose` | Attach the underlying error. Off by default — no raw stacks. |
+| Flag                 |                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------- |
+| `--schema <file>`    | Contract file. Default: `.env.example`, then `.env.sample`, then `.env.template`. |
+| `--ignore <glob>`    | Extra ignore. Repeatable. Also reads `.gitignore` and `.envcheckignore`.          |
+| `--max-distance <n>` | Typo cutoff. Default 3.                                                           |
+| `--reveal`           | Print values. Default masks to the first and last two characters.                 |
+| `--json`             | JSON on stdout. No color, no spinner. Includes a `summary` object.                |
+| `--force`            | Allow `init` to overwrite an existing schema.                                     |
+| `--stats`            | Aggregate issue counts in the final summary line.                                 |
+| `--skip-empty`       | Skip files that are completely empty.                                             |
+| `--skip-no-pairs`    | Skip files containing only comments or whitespace.                                |
+| `--max-distance <n>` | Typo cutoff (Levenshtein distance). Default 3.                                    |
+| `--no-color`         | Disable ANSI. Also honored: `NO_COLOR`, non-TTY.                                  |
+| `--verbose`          | Attach the underlying error. Off by default — no raw stacks.                      |
 
 CLI flags override `.envcheckrc`.
 
@@ -140,16 +140,16 @@ next: envcheck fix
 
 ## Exit codes
 
-| Code | Meaning |
-| --- | --- |
-| 0 | Match |
-| 1 | Drift |
-| 2 | Usage |
-| 3 | Nothing to scan / no schema |
-| 4 | Unreadable / binary / bad UTF-8 |
-| 5 | Bad `.envcheckrc` |
-| 6 | Interrupted (SIGINT) |
-| 7 | File locked on write |
+| Code | Meaning                         |
+| ---- | ------------------------------- |
+| 0    | Match                           |
+| 1    | Drift                           |
+| 2    | Usage                           |
+| 3    | Nothing to scan / no schema     |
+| 4    | Unreadable / binary / bad UTF-8 |
+| 5    | Bad `.envcheckrc`               |
+| 6    | Interrupted (SIGINT)            |
+| 7    | File locked on write            |
 
 ## License
 

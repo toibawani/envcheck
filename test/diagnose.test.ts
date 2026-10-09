@@ -1,12 +1,12 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { diagnose } from "../src/diagnose.ts";
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { diagnose } from '../src/diagnose.ts';
 
-test("diagnose reports envcheck/node/platform/cwd", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-diagnose-"));
+test('diagnose reports envcheck/node/platform/cwd', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-diagnose-'));
   try {
     const report = diagnose(dir);
     assert.match(report.envcheck, /^\d+\.\d+\.\d+$/);
@@ -19,22 +19,22 @@ test("diagnose reports envcheck/node/platform/cwd", () => {
   }
 });
 
-test("diagnose reports not-found schema when missing", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-diagnose-"));
+test('diagnose reports not-found schema when missing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-diagnose-'));
   try {
     const report = diagnose(dir);
-    assert.equal((report.schema as { status: string }).status, "not-found");
-    assert.ok((report.schema as { paths: string[] }).paths.includes(".env.example"));
+    assert.equal((report.schema as { status: string }).status, 'not-found');
+    assert.ok((report.schema as { paths: string[] }).paths.includes('.env.example'));
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 });
 
-test("diagnose reports config not-found when no .envcheckrc", () => {
-  const dir = mkdtempSync(join(tmpdir(), "envcheck-diagnose-"));
+test('diagnose reports config not-found when no .envcheckrc', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-diagnose-'));
   try {
     const report = diagnose(dir);
-    assert.equal((report.config as { status: string }).status, "not-found");
+    assert.equal((report.config as { status: string }).status, 'not-found');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
