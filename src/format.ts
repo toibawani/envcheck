@@ -94,6 +94,7 @@ export function renderText(input: RenderInput): string {
       typo: 0,
       extra: 0,
       dup: 0,
+      interpolated: 0,
       other: 0,
     };
     const parts: string[] = [];
@@ -102,7 +103,7 @@ export function renderText(input: RenderInput): string {
     if (counts.typo) parts.push(`${counts.typo} typo`);
     if (counts.extra) parts.push(`${counts.extra} extra`);
     if (counts.dup) parts.push(`${counts.dup} dup`);
-    if (counts.interpolated) parts.push(`${counts.interpolated} interpolated`);
+    if (counts.interpolated) parts.push(`${(counts.interpolated as number)} interpolated`);
     if (counts.other) parts.push(`${counts.other} empty-file`);
     lines.push(
       `${c.red(String(problems))} issue${problems === 1 ? "" : "s"} across ${input.files.length} file${input.files.length === 1 ? "" : "s"}` +

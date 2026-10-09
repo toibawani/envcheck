@@ -4,13 +4,14 @@ import { isatty } from "node:tty";
 import { loadConfig, type ResolvedConfig } from "./config.ts";
 import { scanEnvFiles, defaultSchemaRel, type FoundFile } from "./scan.ts";
 import { loadEnvFile, type LoadedEnv } from "./load.ts";
-import { diffFile } from "./diff.ts";
-import { renderJson, renderText } from "./format.ts";
+import { diffFile, type FileReport } from "./diff.ts";
+import { renderJson, renderText, type RenderInput } from "./format.ts";
 import { EnvcheckError } from "./errors.ts";
 import { Exit } from "./exit.ts";
 import { c } from "./color.ts";
 import { fixFile } from "./fix.ts";
 import { assertInteractive } from "./prompt.ts";
+import type { ParseResult } from "./parse.ts";
 
 export interface CheckFlags {
   cwd: string;
@@ -30,6 +31,7 @@ export interface RunCheckInput {
   reveal: boolean;
   skipEmpty: boolean;
   skipNoPairs: boolean;
+  stats?: CheckStats;
   files: {
     loaded: LoadedEnv;
     report: FileReport;
@@ -75,7 +77,7 @@ function computeStats(compared: LoadedEnv[], schema: ParseResult): CheckStats {
 
 export function runCheck(flags: CheckFlags): CheckOutcome {
   const { schemaRel, loadedSchema, compared, root } = collect(flags);
-  const input = {
+  const input: RunCheckInput = {
     root,
     schemaRel,
     reveal: flags.reveal,
@@ -86,9 +88,8 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),
     })),
   };
-  const stats = flags.stats ? computeStats(compared, loadedSchema.parsed) : undefined;
-  if (stats) {
-    input.stats = stats;
+  if (flags.stats) {
+    input.stats = computeStats(compared, loadedSchema.parsed);
   }
   const text = flags.json ? renderJson(input) : renderText(input);
   const drifted = input.files.some(
