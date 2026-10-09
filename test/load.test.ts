@@ -66,3 +66,42 @@ test("loadEnvFile loads keys as a map", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("loadEnvFile handles keys with equals signs in values", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-load-"));
+  try {
+    writeFileSync(join(dir, ".env"), "A=1=2=3\n", "utf8");
+    const loaded = loadEnvFile(join(dir, ".env"), ".env");
+    const a = loaded.parsed.map.get("A");
+    assert.ok(a);
+    assert.strictEqual(a.value, "1=2=3");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("loadEnvFile handles export prefix", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-load-"));
+  try {
+    writeFileSync(join(dir, ".env"), "export EXPORTED=1\n", "utf8");
+    const loaded = loadEnvFile(join(dir, ".env"), ".env");
+    const a = loaded.parsed.map.get("EXPORTED");
+    assert.ok(a);
+    assert.ok(a.exported);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("loadEnvFile handles inline comments", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-load-"));
+  try {
+    writeFileSync(join(dir, ".env"), "A=1 # inline comment\n", "utf8");
+    const loaded = loadEnvFile(join(dir, ".env"), ".env");
+    const a = loaded.parsed.map.get("A");
+    assert.ok(a);
+    assert.strictEqual(a.comment, "inline comment");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
