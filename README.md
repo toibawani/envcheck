@@ -1,8 +1,17 @@
 # envcheck
 
+> A cross-platform CLI for detecting environment variable drift across `.env*` files.
+
 Compare every `.env*` file in a project to the one file you actually meant to be the contract. Usually `.env.example`.
 
-Missing keys, empty values, orphans, and near-miss typos (`DATBASE_URL` vs `DATABASE_URL`). Values stay masked unless you pass `--reveal`. Files matching `.gitignore` are not read — that is the point, not a side effect.
+Find missing keys, empty values, orphans, duplicates, and near-miss typos (`DATBASE_URL` → `DATABASE_URL`). Values stay masked unless you pass `--reveal`. Files matching `.gitignore` are not read — that is the point, not a side effect.
+
+- `check` — report drift vs. schema
+- `fix` — interactively resolve missing keys, drop orphans, drop typos
+- `init` — seed `.env.example` from keys in use (never your secrets)
+- `doctor` — verify repo, schema, config, and Node setup
+
+Pure Node + TypeScript. Zero runtime dependencies. No secrets left behind.
 
 Toiba · [github.com/toibawani](https://github.com/toibawani) · toibawani14@gmail.com
 
@@ -143,3 +152,7 @@ next: envcheck fix
 ## License
 
 MIT
+
+## Topics
+
+`node` `cli` `typescript` `environment-variables` `dotenv` `env` `devops` `config-management` `developer-tools` `devtools` `nodejs` `cli-tool` `drift-detection`
