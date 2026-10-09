@@ -116,7 +116,7 @@ test("scan returns rel paths with forward slashes", () => {
     mkdirSync(sub, { recursive: true });
     writeFileSync(join(sub, ".env.local"), "A=1\n", "utf8");
     const files = scanEnvFiles({ root, extraIgnore: [] });
-    assert.ok(files[0].rel.includes("/"), "rel uses forward slashes");
+    assert.ok(files.at(0)?.rel.includes("/"), "rel uses forward slashes");
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

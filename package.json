@@ -43,7 +43,9 @@
     "cli",
     "config",
     "schema",
-    "secrets"
+    "secrets",
+    "environment-variables",
+    "drift-detection"
   ],
   "devDependencies": {
     "@types/node": "^22.15.21",

@@ -105,5 +105,5 @@ test("parseEnv loads keys from a real env file", () => {
 test("parseEnv ignores commented lines", () => {
   const comments = parseEnv("# comment\nKEY=value\n", ".env");
   assert.strictEqual(comments.entries.length, 1);
-  assert.strictEqual(comments.entries[0].key, "KEY");
+  assert.strictEqual(comments.entries.at(0)?.key, "KEY");
 });

@@ -25,7 +25,7 @@ test("suggestKey prefers shorter distance", () => {
 test("suggestKey handles single-character keys", () => {
   const keys = ["A", "B", "C"];
   const suggestion = suggestKey("X", keys, 3);
-  assert.ok(["A", "B", "C"].includes(suggestion));
+  assert.ok(suggestion !== undefined && ["A", "B", "C"].includes(suggestion));
 });
 
 test("suggestKey finds match with distance equal to maxDistance", () => {
