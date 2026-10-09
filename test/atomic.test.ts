@@ -4,6 +4,7 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync, statSync, readdirSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { writeAtomic } from "../src/atomic.ts";
+import { runCheck } from "../src/run.ts";
 
 test("writeAtomic creates file with correct content", () => {
   const dir = mkdtempSync(join(tmpdir(), "envcheck-atomic-"));
@@ -51,6 +52,49 @@ test("writeAtomic leaves no stray temp files behind", () => {
     const entries = readdirSync(dir);
     assert.equal(entries.length, 1);
     assert.equal(entries[0], "test.env");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic commit preserves file content across runs", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-atomic-"));
+  try {
+    writeFileSync(join(dir, ".env.example"), "FOO=\\nBAR=\\nBAZ=\\n", "utf8");
+    writeFileSync(join(dir, ".env"), "FOO=hello\\nBAR=world\\nBAZ=test\\n", "utf8");
+    runCheck({
+      cwd: dir,
+      json: false,
+      reveal: false,
+      ignore: [],
+      stats: false,
+      skipEmpty: false,
+      skipNoPairs: false,
+    });
+    const content = readFileSync(join(dir, ".env"), "utf8");
+    assert.strictEqual(content, "FOO=hello\\nBAR=world\\nBAZ=test\\n");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("atomic commit does not modify the schema", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-atomic-"));
+  try {
+    writeFileSync(join(dir, ".env.example"), "FOO=\\nBAR=\\n", "utf8");
+    writeFileSync(join(dir, ".env"), "FOO=hello\\nBAR=world\\nBAZ=test\\n", "utf8");
+    runCheck({
+      cwd: dir,
+      json: false,
+      reveal: false,
+      ignore: [],
+      stats: false,
+      skipEmpty: false,
+      skipNoPairs: false,
+    });
+    const schema = readFileSync(join(dir, ".env.example"), "utf8");
+    assert.ok(!schema.includes("BAZ"));
+    assert.strictEqual(schema, "FOO=\\nBAR=\\n");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
