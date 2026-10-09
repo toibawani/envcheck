@@ -1,0 +1,9 @@
+# Auto detect text files for consistent line endings
+* text=auto
+
+# Keep dist builds deterministic
+dist/** binary
+
+# Coverage and build artifacts
+coverage/** binary
+*.tsbuildinfo binary
