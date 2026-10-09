@@ -47,14 +47,18 @@ export function diffFile(
     }
     if (schemaSet.has(entry.key)) continue;
     const suggestion = suggestKey(entry.key, schemaKeys, maxDistance);
-    if (suggestion) {
+    if (suggestion && !parsed.map.has(suggestion)) {
       typos.push({ key: entry.key, suggestion, line: entry.line });
     } else {
       extra.push({ key: entry.key, line: entry.line });
     }
   }
 
-  missing.sort((a, b) => a.localeCompare(b));
+  // A typo that points at a schema key explains the absence — don't double-count.
+  const explained = new Set(typos.map((t) => t.suggestion));
+  const missingFinal = missing.filter((k) => !explained.has(k));
+
+  missingFinal.sort((a, b) => a.localeCompare(b));
   empty.sort((a, b) => a.key.localeCompare(b.key));
   extra.sort((a, b) => a.key.localeCompare(b.key));
   typos.sort((a, b) => a.key.localeCompare(b.key));
@@ -63,7 +67,7 @@ export function diffFile(
 
   const report: FileReport = {
     path: filePath,
-    missing,
+    missing: missingFinal,
     empty,
     extra,
     typos,
@@ -72,7 +76,7 @@ export function diffFile(
     ok: false,
   };
   report.ok =
-    missing.length === 0 &&
+    missingFinal.length === 0 &&
     empty.length === 0 &&
     extra.length === 0 &&
     typos.length === 0 &&

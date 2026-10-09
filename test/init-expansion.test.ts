@@ -14,6 +14,7 @@ test("init writes keys sorted without secret values", () => {
       schema: ".env.example",
       ignore: [],
       force: false,
+      dryRun: false,
     });
     assert.strictEqual(outcome.exitCode, 0);
     const content = readFileSync(join(dir, ".env.example"), "utf8");
@@ -36,9 +37,10 @@ test("init respects --force to overwrite existing schema", () => {
     writeFileSync(join(dir, ".env.example"), "OLD=1\n", "utf8");
     writeFileSync(join(dir, ".env"), "NEW=2\n", "utf8");
     assert.throws(() => {
-      runInit({ cwd: dir, schema: ".env.example", ignore: [], force: false });
-    });
-    const outcome = runInit({ cwd: dir, schema: ".env.example", ignore: [], force: true });
+      runInit({ cwd: dir, schema: ".env.example", ignore: [], force: false,
+      dryRun: false });    });
+    const outcome = runInit({ cwd: dir, schema: ".env.example", ignore: [], force: true,
+      dryRun: false });
     assert.strictEqual(outcome.exitCode, 0);
   } finally {
     rmSync(dir, { recursive: true, force: true });

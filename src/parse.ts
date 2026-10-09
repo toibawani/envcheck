@@ -93,6 +93,6 @@ function splitLines(text: string): string[] {
 
 export function maskValue(value: string): string {
   if (value.length === 0) return "(empty)";
-  if (value.length <= 4) return "••••";
+  if (value.length < 5) return "••••";
   return `${value.slice(0, 2)}…${value.slice(-2)}`;
 }

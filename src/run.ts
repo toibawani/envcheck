@@ -13,6 +13,8 @@ import { fixFile } from "./fix.ts";
 import { assertInteractive } from "./prompt.ts";
 import type { ParseResult } from "./parse.ts";
 
+export type FailOnKind = "missing" | "empty" | "extra" | "typo" | "dup";
+
 export interface CheckFlags {
   cwd: string;
   schema?: string;
@@ -23,6 +25,7 @@ export interface CheckFlags {
   stats: boolean;
   skipEmpty: boolean;
   skipNoPairs: boolean;
+  failOn?: FailOnKind[];
 }
 
 export interface RunCheckInput {
@@ -77,25 +80,54 @@ function computeStats(compared: LoadedEnv[], schema: ParseResult): CheckStats {
 
 export function runCheck(flags: CheckFlags): CheckOutcome {
   const { schemaRel, loadedSchema, compared, root } = collect(flags);
+  const kinds = flags.failOn && flags.failOn.length > 0 ? new Set(flags.failOn) : null;
+
+  // --skip-empty / --skip-no-pairs: exclude from the report AND drift scoring.
+  const reported = compared.filter(
+    (loaded) => !(flags.skipEmpty && loaded.emptyFile) && !(flags.skipNoPairs && loaded.noPairs),
+  );
+
   const input: RunCheckInput = {
     root,
     schemaRel,
     reveal: flags.reveal,
     skipEmpty: flags.skipEmpty,
     skipNoPairs: flags.skipNoPairs,
-    files: compared.map((loaded) => ({
+    files: reported.map((loaded) => ({
       loaded,
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),
     })),
   };
+
   if (flags.stats) {
     input.stats = computeStats(compared, loadedSchema.parsed);
   }
-  const text = flags.json ? renderJson(input) : renderText(input);
-  const drifted = input.files.some(
-    (f) => !f.report.ok || f.loaded.emptyFile || f.loaded.noPairs,
-  );
-  return { exitCode: drifted ? Exit.Drift : Exit.Ok, text };
+
+  const drifted = hasDrift(input.files, kinds);
+  return {
+    exitCode: drifted ? Exit.Drift : Exit.Ok,
+    text: flags.json
+      ? renderJson({ ...input, exitCode: drifted ? Exit.Drift : Exit.Ok })
+      : renderText(input),
+  };
+}
+
+function hasDrift(
+  files: { loaded: LoadedEnv; report: import("./diff.ts").FileReport }[],
+  kinds: Set<FailOnKind> | null,
+): boolean {
+  for (const { loaded, report } of files) {
+    if (!kinds) {
+      if (!report.ok || loaded.emptyFile || loaded.noPairs) return true;
+      continue;
+    }
+    if (kinds.has("missing") && report.missing.length) return true;
+    if (kinds.has("empty") && (report.empty.length || loaded.emptyFile || loaded.noPairs)) return true;
+    if (kinds.has("extra") && report.extra.length) return true;
+    if (kinds.has("typo") && report.typos.length) return true;
+    if (kinds.has("dup") && report.duplicates.length) return true;
+  }
+  return false;
 }
 
 export async function runFix(flags: CheckFlags): Promise<CheckOutcome> {

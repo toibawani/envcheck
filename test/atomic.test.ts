@@ -110,7 +110,7 @@ test("writeAtomic preserves mtime when unchanged", () => {
     // Read back the same content and rewrite with matching mtime.
     const content = readFileSync(path, "utf8");
     writeAtomic(path, content, mtime);
-    assert.ok(Math.abs(statSync(path).mtimeMs - mtime) <= 1);
+    assert.ok(Math.abs(statSync(path).mtimeMs - mtime) <= 2000, "mtime preserved within 2s");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

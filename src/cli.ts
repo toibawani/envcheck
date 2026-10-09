@@ -2,7 +2,7 @@ import { argv, exit, stderr, stdout } from "node:process";
 import { resolve } from "node:path";
 import { configureColor, c } from "./color.ts";
 import { isEnvcheckError } from "./errors.ts";
-import { Exit } from "./exit.ts";
+import { Exit, formatExitTable } from "./exit.ts";
 import { armSignals } from "./signals.ts";
 import { version } from "./version.ts";
 import { runCheck, runFix } from "./run.ts";
@@ -33,6 +33,8 @@ flags
   --reveal            print secret values (default: masked)
   --json              machine-readable report
   --force             allow init to overwrite an existing schema
+  --fail-on <list>     exit 1 only for these kinds: missing,empty,extra,typo,dup
+  --dry-run           init: print the schema, write nothing
   --no-color          disable color even on a TTY
   --verbose           include the underlying error message
   -h, --help          this text
@@ -58,6 +60,8 @@ interface Parsed {
   reveal: boolean;
   json: boolean;
   force: boolean;
+  failOn: string[];
+  dryRun: boolean;
   noColor: boolean;
   verbose: boolean;
   help: boolean;
@@ -75,6 +79,8 @@ function parseArgs(args: string[]): Parsed {
     reveal: false,
     json: false,
     force: false,
+    failOn: [],
+    dryRun: false,
     noColor: false,
     verbose: false,
     help: false,
@@ -94,6 +100,14 @@ function parseArgs(args: string[]): Parsed {
     else if (a === "--json") out.json = true;
     else if (a === "--reveal") out.reveal = true;
     else if (a === "--force") out.force = true;
+    else if (a === "--dry-run") out.dryRun = true;
+    else if (a === "--fail-on") {
+      const raw = need(args, ++i, "--fail-on");
+      for (const part of raw.split(",")) {
+        const p = part.trim().toLowerCase();
+        if (p) out.failOn.push(p);
+      }
+    }
     else if (a === "--no-color") out.noColor = true;
     else if (a === "--verbose") out.verbose = true;
     else if (a === "--schema") out.schema = need(args, ++i, "--schema");
@@ -146,6 +160,16 @@ async function main(): Promise<void> {
     return;
   }
 
+  const failOnAllowed = new Set(["missing", "empty", "extra", "typo", "dup"]);
+  for (const k of parsed.failOn) {
+    if (!failOnAllowed.has(k)) {
+      failUsage(
+        `Unknown --fail-on kind "${k}".`,
+        "envcheck check --fail-on missing,empty,extra,typo,dup",
+      );
+    }
+  }
+
   const flags = {
     cwd: resolve(parsed.dir),
     schema: parsed.schema,
@@ -156,6 +180,7 @@ async function main(): Promise<void> {
     stats: parsed.stats,
     skipEmpty: parsed.skipEmpty,
     skipNoPairs: parsed.skipNoPairs,
+    failOn: parsed.failOn as import("./run.ts").FailOnKind[],
   };
 
   if (parsed.command === "fix") {
@@ -170,6 +195,7 @@ async function main(): Promise<void> {
       schema: flags.schema,
       ignore: flags.ignore,
       force: parsed.force,
+      dryRun: parsed.dryRun,
     });
     stdout.write(outcome.text);
     exit(outcome.exitCode);
@@ -272,7 +298,8 @@ function aboutText(): string {
     "A schema-of-record check for .env files.",
     "Repo: https://github.com/toibawani/envcheck",
     "",
-    "exit  0 ok  1 drift  2 usage  3 not found  4 unreadable  5 config  6 interrupted  7 locked",
+    "exit codes",
+    formatExitTable(),
     "",
   ].join("\n");
 }
