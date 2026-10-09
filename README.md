@@ -51,6 +51,9 @@ node dist/cli.js check
 | `--reveal` | Print values. Default masks to the first and last two characters. |
 | `--json` | JSON on stdout. No color, no spinner. Includes a `summary` object. |
 | `--force` | Allow `init` to overwrite an existing schema. |
+| `--stats` | Aggregate issue counts in the final summary line. |
+| `--skip-empty` | Skip files that are completely empty. |
+| `--skip-no-pairs` | Skip files containing only comments or whitespace. |
 | `--no-color` | Disable ANSI. Also honored: `NO_COLOR`, non-TTY. |
 | `--verbose` | Attach the underlying error. Off by default — no raw stacks. |
 
