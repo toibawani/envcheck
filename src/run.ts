@@ -24,6 +24,18 @@ export interface CheckFlags {
   skipNoPairs: boolean;
 }
 
+export interface RunCheckInput {
+  root: string;
+  schemaRel: string;
+  reveal: boolean;
+  skipEmpty: boolean;
+  skipNoPairs: boolean;
+  files: {
+    loaded: LoadedEnv;
+    report: FileReport;
+  }[];
+}
+
 export interface CheckOutcome {
   exitCode: number;
   text: string;
@@ -67,7 +79,6 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
     root,
     schemaRel,
     reveal: flags.reveal,
-    stats: flags.stats ? computeStats(compared, loadedSchema.parsed) : undefined,
     skipEmpty: flags.skipEmpty,
     skipNoPairs: flags.skipNoPairs,
     files: compared.map((loaded) => ({
@@ -75,6 +86,10 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),
     })),
   };
+  const stats = flags.stats ? computeStats(compared, loadedSchema.parsed) : undefined;
+  if (stats) {
+    input.stats = stats;
+  }
   const text = flags.json ? renderJson(input) : renderText(input);
   const drifted = input.files.some(
     (f) => !f.report.ok || f.loaded.emptyFile || f.loaded.noPairs,
