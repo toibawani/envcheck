@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseEnv } from '../src/parse.ts';
+import { schemaDefaults } from '../src/diff.ts';
 import { diffFile } from '../src/diff.ts';
 
 test('missing, empty, extra, typo', () => {
@@ -63,4 +64,12 @@ test('diffFile reports empty file', () => {
   const report = diffFile('.env', file, schema, 3);
   assert.deepEqual(report.missing, ['A']);
   assert.equal(report.ok, false);
+});
+
+test('schemaDefaults returns the schema map', () => {
+  const parsed = parseEnv('FOO=bar\nBAR=baz\n', 'schema');
+  const defaults = schemaDefaults(parsed);
+  assert.ok(defaults.has('FOO'));
+  assert.strictEqual(defaults.get('FOO')?.value, 'bar');
+  assert.ok(defaults.has('BAR'));
 });

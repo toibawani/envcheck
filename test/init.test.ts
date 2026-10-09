@@ -4,6 +4,8 @@ import { mkdtempSync, writeFileSync, readFileSync, rmSync, existsSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runInit } from '../src/init.ts';
+import { EnvcheckError } from '../src/errors.ts';
+import { Exit } from '../src/exit.ts';
 
 test('init writes sorted keys without secret values', () => {
   const dir = mkdtempSync(join(tmpdir(), 'envcheck-init-'));
@@ -36,6 +38,42 @@ test('init --dry-run prints keys and does not write', () => {
     assert.match(out.text, /FOO=/);
     assert.doesNotMatch(out.text, /secret/);
     assert.equal(existsSync(join(dir, '.env.example')), false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('init throws when no .env files exist', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-init-'));
+  try {
+    assert.throws(
+      () => runInit({ cwd: dir, schema: '.env.example', ignore: [], force: false, dryRun: false }),
+      (err: unknown) => {
+        assert.ok(err instanceof EnvcheckError);
+        assert.equal(err.exitCode, Exit.NotFound);
+        assert.match(err.message, /No \.env files found/);
+        return true;
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('init throws when .env files have no keys', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-init-'));
+  try {
+    writeFileSync(join(dir, '.env'), '# just a comment\n', 'utf8');
+    writeFileSync(join(dir, '.env.local'), '\n', 'utf8');
+    assert.throws(
+      () => runInit({ cwd: dir, schema: '.env.example', ignore: [], force: false, dryRun: false }),
+      (err: unknown) => {
+        assert.ok(err instanceof EnvcheckError);
+        assert.equal(err.exitCode, Exit.NotFound);
+        assert.match(err.message, /no keys inside them/);
+        return true;
+      },
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

@@ -1,30 +1,64 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Stream } from 'node:stream';
-import { assertInteractive } from '../src/prompt.ts';
-import { EnvcheckError } from '../src/errors.ts';
-import { Exit } from '../src/exit.ts';
+import { confirm, ask, _setPrompts } from '../src/prompt.ts';
 
-test('assertInteractive throws when stdin is not a TTY', () => {
-  const stdin = new Stream.Readable({ read() {} });
-  Object.defineProperty(stdin, 'isTTY', { value: false, writable: true });
-  const stdout = new Stream.Writable({ write() {} });
-  Object.defineProperty(stdout, 'isTTY', { value: false, writable: true });
-  const oldStdin = process.stdin;
-  const oldStdout = process.stdout;
+test('confirm uses the injected confirm function', async () => {
+  const answers: string[] = [];
   try {
-    Object.defineProperty(process, 'stdin', { value: stdin, writable: true });
-    Object.defineProperty(process, 'stdout', { value: stdout, writable: true });
-    assert.throws(
-      () => assertInteractive(),
-      (err: unknown) => {
-        assert(err instanceof EnvcheckError);
-        assert.strictEqual((err as EnvcheckError).exitCode, Exit.Usage);
+    _setPrompts(
+      async (q) => {
+        answers.push(q);
         return true;
       },
+      async (q) => {
+        throw new Error('ask should not be called when testConfirm is set');
+      },
     );
+    assert.equal(await confirm('hello'), true);
+    assert.deepEqual(answers, ['hello']);
   } finally {
-    process.stdin = oldStdin;
-    process.stdout = oldStdout;
+    _setPrompts(undefined, undefined);
+  }
+});
+
+test('confirm returns false when the answer is not y/yes', async () => {
+  const answers: string[] = [];
+  try {
+    _setPrompts(undefined, async (q) => {
+      answers.push(q);
+      return 'n';
+    });
+    assert.equal(await confirm('hello'), false);
+    assert.deepEqual(answers, ['hello [y/N] ']);
+  } finally {
+    _setPrompts(undefined, undefined);
+  }
+});
+
+test('confirm returns true for yes', async () => {
+  const answers: string[] = [];
+  try {
+    _setPrompts(undefined, async (q) => {
+      answers.push(q);
+      return 'yes';
+    });
+    assert.equal(await confirm('hello'), true);
+    assert.deepEqual(answers, ['hello [y/N] ']);
+  } finally {
+    _setPrompts(undefined, undefined);
+  }
+});
+
+test('ask returns the question text', async () => {
+  const answers: string[] = [];
+  try {
+    _setPrompts(undefined, async (q) => {
+      answers.push(q);
+      return 'answered';
+    });
+    assert.equal(await ask('what?'), 'answered');
+    assert.deepEqual(answers, ['what?']);
+  } finally {
+    _setPrompts(undefined, undefined);
   }
 });

@@ -4,6 +4,9 @@ export type Tone = 'red' | 'yellow' | 'green' | 'dim' | 'bold' | 'cyan';
 
 let enabled = true;
 
+// Internal test hook so the tty checker can be overridden.
+let ttyCheck: (fd: number) => boolean = isatty;
+
 export function colorEnabled(): boolean {
   return enabled;
 }
@@ -11,8 +14,13 @@ export function colorEnabled(): boolean {
 export function configureColor(opts: { noColorFlag: boolean; json: boolean }): void {
   const envOff = process.env.NO_COLOR !== undefined && process.env.NO_COLOR !== '';
   const dumb = process.env.TERM === 'dumb';
-  const piped = !isatty(1);
+  const piped = !ttyCheck(1);
   enabled = !(opts.noColorFlag || opts.json || envOff || dumb || piped);
+}
+
+// PRIVATE: override the tty checker used by configureColor.
+export function _setTtyCheck(check: (fd: number) => boolean): void {
+  ttyCheck = check;
 }
 
 function wrap(open: string, close: string, text: string): string {

@@ -4,6 +4,8 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { diagnose } from '../src/diagnose.ts';
+import { EnvcheckError } from '../src/errors.ts';
+import { Exit } from '../src/exit.ts';
 
 test('diagnose reports envcheck/node/platform/cwd', () => {
   const dir = mkdtempSync(join(tmpdir(), 'envcheck-diagnose-'));
@@ -35,6 +37,43 @@ test('diagnose reports config not-found when no .envcheckrc', () => {
   try {
     const report = diagnose(dir);
     assert.equal((report.config as { status: string }).status, 'not-found');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('diagnose returns an error when .envcheckrc is invalid JSON', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-diag-'));
+  try {
+    writeFileSync(join(dir, '.envcheckrc'), 'not-json', 'utf8');
+    const output = diagnose(dir);
+    assert.ok(!('path' in output.config));
+    const cfg = output.config as { status: 'invalid'; message: string };
+    assert.equal(cfg.status, 'invalid');
+    assert.ok(cfg.message.length > 0);
+    assert.deepEqual(output.files, []);
+    assert.equal(output.issueCount, 2);
+    assert.ok(output.issues[0] !== undefined && /not valid JSON/i.test(output.issues[0]));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('diagnose returns an error when the schema is missing', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-diag-'));
+  try {
+    writeFileSync(join(dir, '.env'), 'FOO=bar\n', 'utf8');
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ schema: '.env.example' }), 'utf8');
+    const output = diagnose(dir);
+    assert.equal(output.files.length, 1);
+    assert.ok(output.files[0] !== undefined);
+    assert.equal(output.files[0].path, '.env');
+    assert.equal(output.files[0].schema, false);
+    assert.ok(output.issues.length > 0);
+    assert.ok(
+      output.issues[0] !== undefined &&
+        /schema not found|Cannot find|no schema/i.test(output.issues[0]),
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

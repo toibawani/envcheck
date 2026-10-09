@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync, chmodSync } from 'node:fs';
+import { ConfigError } from '../src/errors.ts';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { loadConfig } from '../src/config.ts';
@@ -128,6 +129,67 @@ test('loadConfig throws Exit.Config when config file is unreadable', () => {
     const result = loadConfig(dir);
     assert.equal(result.schema, undefined);
     assert.equal(result.configPath, undefined);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig throws Exit.Config on unreadable config file (EACCES)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
+  try {
+    // On systems that allow it, restricting the file makes the read fail with EACCES.
+    writeFileSync(join(dir, '.envcheckrc'), JSON.stringify({ schema: '.env.example' }), 'utf8');
+    chmodSync(join(dir, '.envcheckrc'), 0o000);
+    assert.throws(
+      () => loadConfig(dir),
+      (err: unknown) => {
+        assert.ok(err instanceof EnvcheckError);
+        assert.equal((err as EnvcheckError).exitCode, Exit.Config);
+        assert.match((err as Error).message, /Could not read \.envcheckrc/);
+        return true;
+      },
+    );
+  } finally {
+    try {
+      chmodSync(join(dir, '.envcheckrc'), 0o644);
+    } catch {}
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig throws ConfigError on JSON null', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
+  try {
+    writeFileSync(join(dir, '.envcheckrc'), 'null', 'utf8');
+    assert.throws(
+      () => loadConfig(dir),
+      (err: unknown) => {
+        assert.ok(err instanceof ConfigError);
+        assert.match((err as EnvcheckError).why, /must be a JSON object/);
+        return true;
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('loadConfig throws ConfigError on unknown keys', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-config-'));
+  try {
+    writeFileSync(
+      join(dir, '.envcheckrc'),
+      JSON.stringify({ schema: '.env.example', unknown: true }),
+      'utf8',
+    );
+    assert.throws(
+      () => loadConfig(dir),
+      (err: unknown) => {
+        assert.ok(err instanceof ConfigError);
+        assert.match((err as EnvcheckError).why, /Unknown key "unknown"/);
+        return true;
+      },
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

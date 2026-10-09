@@ -73,3 +73,8 @@ test('ignores schema keys shorter than 4 chars', () => {
 test('false positive: unrelated long key is not suggested', () => {
   assert.equal(suggestKey('COMPLETELY_OTHER', ['DATABASE_URL'], 2), undefined);
 });
+
+test('suggestKey suggests transposed keys', () => {
+  assert.equal(suggestKey('BAZY', ['ABZY']), 'ABZY');
+  assert.equal(suggestKey('PASSWORd', ['PASSWORD']), 'PASSWORD');
+});

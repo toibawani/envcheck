@@ -14,9 +14,10 @@
   ],
   "scripts": {
     "build": "tsup",
+    "coverage": "c8 report",
     "dev": "node --experimental-strip-types src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test test/**/*.test.ts",
+    "test": "c8 --reporter=lcov --reporter=text --all node --experimental-strip-types --test test/**/*.test.ts",
     "lint": "prettier --check .",
     "prepublishOnly": "npm run build && npm test && npm run typecheck"
   },
@@ -49,6 +50,7 @@
   ],
   "devDependencies": {
     "@types/node": "^22.15.21",
+    "c8": "^12.0.0",
     "prettier": "^3.9.9",
     "tsup": "^8.5.0",
     "typescript": "^5.8.3"
