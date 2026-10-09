@@ -7,9 +7,9 @@ import { Exit } from "../src/exit.ts";
 
 test("assertInteractive throws when stdin is not a TTY", () => {
   const stdin = new Stream.Readable({ read() {} });
-  stdin.isTTY = false;
+  Object.defineProperty(stdin, 'isTTY', { value: false, writable: true });
   const stdout = new Stream.Writable({ write() {} });
-  stdout.isTTY = false;
+  Object.defineProperty(stdout, 'isTTY', { value: false, writable: true });
   const oldStdin = process.stdin;
   const oldStdout = process.stdout;
   try {
