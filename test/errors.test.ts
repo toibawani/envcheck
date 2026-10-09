@@ -46,11 +46,15 @@ test("LockError -> Locked with retry hint", () => {
   assert.ok(err.message.includes(".env"));
 });
 
-test("ConfigError -> Config with jsonlint hint", () => {
-  const err = new ConfigError(".envcheckrc", "Unexpected token '}' at line 4");
+test("ConfigError -> Config with JSON-hinting fix", () => {
+  const err = new ConfigError(
+    ".envcheckrc",
+    "Unexpected token '}' at line 4",
+    "Fix the JSON, or delete the file and pass flags directly.",
+    "envcheck check --schema .env.example",
+  );
   assert.equal(err.exitCode, Exit.Config);
   assert.ok(err.message.includes(".envcheckrc"));
-  assert.ok(err.fix.includes("jsonlint"));
 });
 
 test("InterruptedError -> Interrupted, no partial write", () => {
@@ -64,7 +68,7 @@ test("typed subclasses are also EnvcheckError", () => {
     new SchemaNotFound("x"),
     new ReadError("y", "z", "h"),
     new LockError("y", "z"),
-    new ConfigError("x", "z"),
+    new ConfigError("x", "bad thing", "why", "how"),
     new InterruptedError(),
   ];
   for (const err of errs) {

@@ -1,6 +1,6 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { EnvcheckError } from "./errors.ts";
+import { ConfigError, EnvcheckError } from "./errors.ts";
 import { Exit } from "./exit.ts";
 
 export interface ProjectConfig {
@@ -9,6 +9,8 @@ export interface ProjectConfig {
   root?: string;
   maxDistance?: number;
 }
+
+const KNOWN_KEYS = new Set<keyof ProjectConfig>(["schema", "ignore", "root", "maxDistance"]);
 
 export interface ResolvedConfig {
   schema: string | undefined;
@@ -57,12 +59,22 @@ export function loadConfig(cwd: string): ResolvedConfig {
       );
     }
     if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
-      throw new EnvcheckError(
-        Exit.Config,
+      throw new ConfigError(
+        configPath ?? name,
         `${name} must be a JSON object.`,
         `Got ${Array.isArray(raw) ? "an array" : typeof raw} at the top level.`,
         `Rewrite ${name} as { "schema": ".env.example" }`,
       );
+    }
+    for (const key of Object.keys(raw) as (keyof ProjectConfig)[]) {
+      if (!KNOWN_KEYS.has(key)) {
+        throw new ConfigError(
+          configPath,
+          `Unknown key "${key}".`,
+          `Known keys are: ${[...KNOWN_KEYS].join(", ")}.`,
+          `Remove "${key}" from ${name}, or pass flags directly instead.`,
+        );
+      }
     }
     break;
   }

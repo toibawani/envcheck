@@ -77,6 +77,8 @@ CLI flags override `.envcheckrc`.
 }
 ```
 
+Only `schema`, `ignore`, `root`, and `maxDistance` are supported — any other key causes an error.
+
 ## Usage
 
 ```sh

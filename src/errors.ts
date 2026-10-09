@@ -49,15 +49,10 @@ export class LockError extends EnvcheckError {
   }
 }
 
-/** .envcheckrc could not be parsed. */
+/** .envcheckrc could not be parsed (bad JSON or unknown keys). */
 export class ConfigError extends EnvcheckError {
-  constructor(configPath: string, cause: string) {
-    super(
-      Exit.Config,
-      `Bad ${configPath}.`,
-      cause,
-      `Validate ${configPath} as JSON (https://jsonlint.com) or pass flags instead.`,
-    );
+  constructor(configPath: string, what: string, why: string, fix: string) {
+    super(Exit.Config, `Bad ${configPath}.`, what, fix);
   }
 }
 
