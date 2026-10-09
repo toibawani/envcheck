@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { loadConfig } from "../src/config.ts";
@@ -95,6 +95,24 @@ test("loadConfig throws Exit.Config on negative maxDistance", () => {
       () => loadConfig(dir),
       (err: unknown) => err instanceof EnvcheckError && err.exitCode === Exit.Config,
     );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+
+
+
+test("loadConfig does not search parent directories", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-config-"));
+  const child = join(dir, "child");
+  mkdirSync(child, { recursive: true });
+  try {
+    // Put a config in the parent but not the child.
+    writeFileSync(join(dir, ".envcheckrc"), JSON.stringify({ schema: "from-parent" }), "utf8");
+    const result = loadConfig(child);
+    assert.equal(result.schema, undefined);
+    assert.equal(result.configPath, undefined);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
