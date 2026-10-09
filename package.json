@@ -9,14 +9,16 @@
   "files": [
     "dist",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    ".envcheckrc.example"
   ],
   "scripts": {
     "build": "tsup",
     "dev": "node --experimental-strip-types src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test test/**/*.test.ts",
-    "prepublishOnly": "npm run build"
+    "lint": "prettier --check .",
+    "prepublishOnly": "npm run build && npm test && npm run typecheck"
   },
   "engines": {
     "node": ">=18"
