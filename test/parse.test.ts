@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseEnv } from "../src/parse.ts";
+import { mkdtempSync, writeFileSync, rmSync } from "node:fs";
+import { readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { EnvcheckError } from "../src/errors.ts";
 
 test("quoted, export, comments, empty lines", () => {
@@ -81,4 +85,25 @@ test("empty file vs comments-only", () => {
   assert.equal(empty.entries.length, 0);
   const comments = parseEnv("# only\n\n# still\n", "t.env");
   assert.equal(comments.entries.length, 0);
+});
+
+
+test("parseEnv loads keys from a real env file", () => {
+  const dir = mkdtempSync(join(tmpdir(), "envcheck-parse-"));
+  try {
+    writeFileSync(join(dir, ".env"), "A=1\nB=2\n", "utf8");
+    const content = readFileSync(join(dir, ".env"), "utf8");
+    const result = parseEnv(content, ".env");
+    assert.strictEqual(result.entries.length, 2);
+    assert.strictEqual(result.map.get("A")?.value, "1");
+    assert.strictEqual(result.map.get("B")?.value, "2");
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("parseEnv ignores commented lines", () => {
+  const comments = parseEnv("# comment\nKEY=value\n", ".env");
+  assert.strictEqual(comments.entries.length, 1);
+  assert.strictEqual(comments.entries[0].key, "KEY");
 });
