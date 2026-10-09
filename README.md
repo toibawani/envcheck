@@ -67,7 +67,24 @@ CLI flags override `.envcheckrc`.
 }
 ```
 
-## Example
+## Usage
+
+```sh
+# Compare local .env files to the schema of record
+envcheck check
+
+# Check a specific directory with a custom schema
+envcheck check ./config --schema .env.schema
+
+# Report only, masked values
+envcheck check --stats
+
+# Walk missing keys and drop orphans interactively
+envcheck fix
+
+# Build .env.example from your current .env files
+envcheck init
+```
 
 ```text
 $ envcheck check
