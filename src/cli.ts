@@ -7,6 +7,7 @@ import { armSignals } from "./signals.ts";
 import { version } from "./version.ts";
 import { runCheck, runFix } from "./run.ts";
 import { runInit } from "./init.ts";
+import { runDoctor } from "./doctor.ts";
 
 const HELP = `envcheck — compare .env files to a schema of record
 
@@ -20,6 +21,7 @@ usage
 
 commands
   check     scan and report missing, empty, extra, and typo'd keys
+  doctor    verify environment and schema setup
   fix       walk missing and orphaned keys, preview, then write
   init      build .env.example from keys already in your .env files
   about     version, author, exit codes
@@ -101,7 +103,7 @@ function parseArgs(args: string[]): Parsed {
       failUsage(`Unknown flag ${a}.`, `envcheck --help`);
     } else positional.push(a);
   }
-  if (positional[0] && ["check", "fix", "init", "about"].includes(positional[0])) {
+  if (positional[0] && ["check", "fix", "init", "about", "doctor"].includes(positional[0])) {
     out.command = positional[0];
     if (positional[1]) out.dir = positional[1];
     if (positional.length > 2) failUsage(`Unexpected argument ${positional[2]}.`, "envcheck --help");
@@ -173,6 +175,16 @@ async function main(): Promise<void> {
     exit(outcome.exitCode);
   }
 
+  if (parsed.command === "doctor") {
+    const outcome = runDoctor({
+      cwd: flags.cwd,
+      schema: flags.schema,
+      ignore: flags.ignore,
+    });
+    stdout.write(outcome.text);
+    exit(outcome.exitCode);
+  }
+
   const outcome = runCheck(flags);
   stdout.write(outcome.text);
   exit(outcome.exitCode);
@@ -201,6 +213,18 @@ Collects every key from discovered .env* files (never copies secret values)
 and writes them as KEY= lines into .env.example (or --schema).
 
 Refuses to overwrite unless --force is passed.
+
+author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
+`;
+  }
+  if (command === "doctor") {
+    return `envcheck doctor — verify environment and schema setup
+
+usage
+  envcheck doctor [dir]
+
+prints environment, repository, schema, and configuration checks.
+Author and exit codes are covered by envcheck about.
 
 author  Toiba  https://github.com/toibawani  toibawani14@gmail.com
 `;
