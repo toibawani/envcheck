@@ -36,3 +36,37 @@ test("scan honors gitignore, envcheckignore, and does not loop on symlink cycles
     rmSync(root, { recursive: true, force: true });
   }
 });
+
+test("scan respects .envcheckignore with subdirectory patterns", () => {
+  const root = mkdtempSync(join(tmpdir(), "envcheck-"));
+  try {
+    writeFileSync(join(root, ".envcheckignore"), "tmp/*.env.*\n", "utf8");
+    mkdirSync(join(root, "tmp"), { recursive: true });
+    writeFileSync(join(root, ".env.example"), "A=1\n", "utf8");
+    writeFileSync(join(root, ".env"), "A=1\n", "utf8");
+    writeFileSync(join(root, "tmp/.env.tmpfile"), "A=2\n", "utf8");
+    const found = scanEnvFiles({ root, extraIgnore: [] }).map((f) => f.rel);
+    assert.ok(found.includes(".env.example"));
+    assert.ok(found.includes(".env"));
+    assert.ok(!found.includes("tmp/.env.tmpfile"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("scan honors .envcheckignore in subdirectories", () => {
+  const root = mkdtempSync(join(tmpdir(), "envcheck-"));
+  try {
+    const sub = join(root, "config");
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(join(sub, ".envcheckignore"), ".env.secret\n", "utf8");
+    writeFileSync(join(root, ".env.example"), "A=1\n", "utf8");
+    writeFileSync(join(sub, ".env.public"), "B=2\n", "utf8");
+    writeFileSync(join(sub, ".env.secret"), "C=3\n", "utf8");
+    const found = scanEnvFiles({ root, extraIgnore: [] }).map((f) => f.rel);
+    assert.ok(found.includes("config/.env.public"));
+    assert.ok(!found.includes("config/.env.secret"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
