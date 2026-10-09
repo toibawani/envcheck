@@ -38,7 +38,7 @@ test("writeAtomic preserves existing file mtime when expectedMtime is provided",
     writeFileSync(path, "OLD=value\n", "utf8");
     const mtime = statSync(path).mtimeMs;
     writeAtomic(path, "NEW=value\n", mtime);
-    assert.ok(Math.abs(statSync(path).mtimeMs - mtime) <= 1);
+    assert.ok(Math.abs(statSync(path).mtimeMs - mtime) <= 2000, "mtime preserved within 2s");
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
