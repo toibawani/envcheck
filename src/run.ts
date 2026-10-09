@@ -68,6 +68,8 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
     schemaRel,
     reveal: flags.reveal,
     stats: flags.stats ? computeStats(compared, loadedSchema.parsed) : undefined,
+    skipEmpty: flags.skipEmpty,
+    skipNoPairs: flags.skipNoPairs,
     files: compared.map((loaded) => ({
       loaded,
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),

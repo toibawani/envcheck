@@ -30,17 +30,24 @@ export function renderText(input: RenderInput): string {
 
   let problems = 0;
   for (const { loaded, report } of input.files) {
+    if (loaded.emptyFile && input.skipEmpty) continue;
+    if (loaded.noPairs && input.skipNoPairs) continue;
+
     if (report.ok && !loaded.emptyFile && !loaded.noPairs) {
       lines.push(`${c.green("ok")}  ${report.path}`);
       continue;
     }
     const mark = report.ok ? c.yellow("·") : c.red("!!");
-    lines.push(`${mark}  ${c.bold(report.path)}${loaded.emptyFile ? c.dim("  (0 bytes)") : ""}`);
+    lines.push(
+      `${mark}  ${c.bold(report.path)}${loaded.emptyFile ? c.dim("  (0 bytes)") : ""}`,
+    );
 
     if (loaded.emptyFile) {
+      if (input.skipEmpty) continue;
       problems++;
       lines.push(`    ${c.yellow("empty file")}  zero bytes, so there is nothing to compare`);
     } else if (loaded.noPairs) {
+      if (input.skipNoPairs) continue;
       problems++;
       lines.push(`    ${c.yellow("no keys")}  file has comments or whitespace only`);
     }
