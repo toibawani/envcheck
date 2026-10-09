@@ -47,7 +47,7 @@ export function diffFile(
     }
     if (schemaSet.has(entry.key)) continue;
     const suggestion = suggestKey(entry.key, schemaKeys, maxDistance);
-    if (suggestion && !parsed.map.has(suggestion)) {
+    if (suggestion) {
       typos.push({ key: entry.key, suggestion, line: entry.line });
     } else {
       extra.push({ key: entry.key, line: entry.line });

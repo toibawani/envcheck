@@ -60,6 +60,9 @@ interface Parsed {
   verbose: boolean;
   help: boolean;
   version: boolean;
+  stats: boolean;
+  skipEmpty: boolean;
+  skipNoPairs: boolean;
 }
 
 function parseArgs(args: string[]): Parsed {
@@ -74,12 +77,18 @@ function parseArgs(args: string[]): Parsed {
     verbose: false,
     help: false,
     version: false,
+    stats: false,
+    skipEmpty: false,
+    skipNoPairs: false,
   };
   const positional: string[] = [];
   for (let i = 0; i < args.length; i++) {
     const a = args[i]!;
     if (a === "--help" || a === "-h") out.help = true;
     else if (a === "--version" || a === "-v") out.version = true;
+    else if (a === "--stats") out.stats = true;
+    else if (a === "--skip-empty") out.skipEmpty = true;
+    else if (a === "--skip-no-pairs") out.skipNoPairs = true;
     else if (a === "--json") out.json = true;
     else if (a === "--reveal") out.reveal = true;
     else if (a === "--force") out.force = true;
@@ -142,6 +151,9 @@ async function main(): Promise<void> {
     reveal: parsed.reveal,
     ignore: parsed.ignore,
     maxDistance: parsed.maxDistance,
+    stats: parsed.stats,
+    skipEmpty: parsed.skipEmpty,
+    skipNoPairs: parsed.skipNoPairs,
   };
 
   if (parsed.command === "fix") {
@@ -214,6 +226,9 @@ flags
   --ignore <glob>     extra ignore, repeatable. also reads .gitignore and .envcheckignore
   --max-distance <n>  Levenshtein cutoff for typo hints (default 3)
   --reveal            show values (default masks to first/last 2 chars)
+  --stats             print aggregate issue counts
+  --skip-empty        hide empty-file issues
+  --skip-no-pairs     hide comment-only issues
   --json              stable JSON for CI
   --no-color          no ANSI, even on a TTY
   --verbose           attach the underlying message

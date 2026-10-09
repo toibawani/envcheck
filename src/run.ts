@@ -19,11 +19,46 @@ export interface CheckFlags {
   reveal: boolean;
   ignore: string[];
   maxDistance?: number;
+  stats: boolean;
+  skipEmpty: boolean;
+  skipNoPairs: boolean;
 }
 
 export interface CheckOutcome {
   exitCode: number;
   text: string;
+}
+
+export interface CheckStats {
+  missing: number;
+  empty: number;
+  typo: number;
+  extra: number;
+  dup: number;
+  interpolated: number;
+  other: number;
+}
+
+function emptyStats(): CheckStats {
+  return { missing: 0, empty: 0, typo: 0, extra: 0, dup: 0, interpolated: 0, other: 0 };
+}
+
+function computeStats(compared: LoadedEnv[], schema: ParseResult): CheckStats {
+  const stats = emptyStats();
+  for (const loaded of compared) {
+    if (loaded.emptyFile || loaded.noPairs) {
+      stats.other++;
+      continue;
+    }
+    const report = diffFile(loaded.rel, loaded.parsed, schema, 3);
+    stats.missing += report.missing.length;
+    stats.empty += report.empty.length;
+    stats.typo += report.typos.length;
+    stats.extra += report.extra.length;
+    stats.dup += report.duplicates.length;
+    stats.interpolated += report.interpolated.length;
+  }
+  return stats;
 }
 
 export function runCheck(flags: CheckFlags): CheckOutcome {
@@ -32,6 +67,7 @@ export function runCheck(flags: CheckFlags): CheckOutcome {
     root,
     schemaRel,
     reveal: flags.reveal,
+    stats: flags.stats ? computeStats(compared, loadedSchema.parsed) : undefined,
     files: compared.map((loaded) => ({
       loaded,
       report: diffFile(loaded.rel, loaded.parsed, loadedSchema.parsed, flags.maxDistance ?? 3),

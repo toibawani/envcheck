@@ -9,6 +9,15 @@ export interface RenderInput {
   files: { loaded: LoadedEnv; report: FileReport }[];
   reveal: boolean;
   ignoredNote?: string;
+  stats?: {
+    missing: number;
+    empty: number;
+    typo: number;
+    extra: number;
+    dup: number;
+    interpolated: number;
+    other: number;
+  };
 }
 
 export function renderText(input: RenderInput): string {
@@ -70,21 +79,21 @@ export function renderText(input: RenderInput): string {
       ),
     );
   } else {
-    const counts = { missing: 0, empty: 0, typo: 0, extra: 0, dup: 0, other: 0 };
-    for (const { loaded, report } of input.files) {
-      counts.missing += report.missing.length;
-      counts.empty += report.empty.length;
-      counts.typo += report.typos.length;
-      counts.extra += report.extra.length;
-      counts.dup += report.duplicates.length;
-      if (loaded.emptyFile || loaded.noPairs) counts.other++;
-    }
+    const counts = input.stats ?? {
+      missing: 0,
+      empty: 0,
+      typo: 0,
+      extra: 0,
+      dup: 0,
+      other: 0,
+    };
     const parts: string[] = [];
     if (counts.missing) parts.push(`${counts.missing} missing`);
     if (counts.empty) parts.push(`${counts.empty} empty`);
     if (counts.typo) parts.push(`${counts.typo} typo`);
     if (counts.extra) parts.push(`${counts.extra} extra`);
     if (counts.dup) parts.push(`${counts.dup} dup`);
+    if (counts.interpolated) parts.push(`${counts.interpolated} interpolated`);
     if (counts.other) parts.push(`${counts.other} empty-file`);
     lines.push(
       `${c.red(String(problems))} issue${problems === 1 ? "" : "s"} across ${input.files.length} file${input.files.length === 1 ? "" : "s"}` +
