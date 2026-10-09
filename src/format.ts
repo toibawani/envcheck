@@ -18,6 +18,8 @@ export interface RenderInput {
     interpolated: number;
     other: number;
   };
+  skipEmpty: boolean;
+  skipNoPairs: boolean;
 }
 
 export function renderText(input: RenderInput): string {
