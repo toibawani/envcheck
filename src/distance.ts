@@ -30,13 +30,14 @@ export function levenshtein(a: string, b: string, cap = 8): number {
   return prev[b.length] ?? cap + 1;
 }
 
-export function suggestKey(needle: string, schemaKeys: string[], maxDistance: number): string | undefined {
+export function suggestKey(needle: string, schemaKeys: string[], maxDistance = 3): string | undefined {
   const upper = needle.toUpperCase();
   let best: string | undefined;
   let bestDist = maxDistance + 1;
   for (const key of schemaKeys) {
     const d = levenshtein(upper, key.toUpperCase(), maxDistance);
-    if (d > 0 && d < bestDist) {
+    if (d === 0) return key;
+    if (d < bestDist) {
       best = key;
       bestDist = d;
       if (d === 1) return key;
