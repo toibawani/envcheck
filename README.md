@@ -36,6 +36,7 @@ node dist/cli.js check
 | `envcheck check [dir]` | Scan and report. Exit 1 if anything drifted. |
 | `envcheck fix [dir]` | Prompt for missing keys, offer to drop orphans, preview, then write. |
 | `envcheck init [dir]` | Build `.env.example` from keys already in your `.env` files (never copies secrets). |
+| `envcheck doctor [dir]` | Verify environment and schema setup — prints version, repository, and configuration checks. |
 | `envcheck about` | Version, author, exit codes. |
 | `envcheck --help` | Help for the command in front of the flag. |
 | `envcheck --version` | Version inlined from `package.json` at build time. |
