@@ -83,13 +83,13 @@ export async function fixFile(
   return "changed";
 }
 
-function quoteIfNeeded(value: string): string {
+export function quoteIfNeeded(value: string): string {
   if (value === "") return "";
   if (/[\s#"'\\$]/.test(value)) return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
   return value;
 }
 
-function renameKey(text: string, from: string, to: string): string {
+export function renameKey(text: string, from: string, to: string): string {
   const lines = text.split("\n");
   return lines
     .map((line) => {
@@ -105,7 +105,7 @@ function renameKey(text: string, from: string, to: string): string {
     .join("\n");
 }
 
-function removeKey(text: string, key: string): string {
+export function removeKey(text: string, key: string): string {
   const lines = text.split("\n");
   const kept = lines.filter((line) => {
     const t = line.trim();
@@ -115,7 +115,7 @@ function removeKey(text: string, key: string): string {
   return kept.join("\n");
 }
 
-function previewDiff(before: string, after: string): string {
+export function previewDiff(before: string, after: string): string {
   const a = before.split("\n");
   const b = after.split("\n");
   const out: string[] = [];
