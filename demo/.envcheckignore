@@ -1,0 +1,3 @@
+# Local override files are not scanned against the schema
+**/.env.local
+**/.env.development.local
