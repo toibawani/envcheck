@@ -8,6 +8,7 @@ import { version } from "./version.ts";
 import { runCheck, runFix } from "./run.ts";
 import { runInit } from "./init.ts";
 import { runDoctor } from "./doctor.ts";
+import { diagnose } from "./diagnose.ts";
 
 const HELP = `envcheck — compare .env files to a schema of record
 
@@ -15,13 +16,15 @@ usage
   envcheck check [dir] [flags]
   envcheck fix [dir]
   envcheck init [dir]
-  envcheck about
+  envcheck doctor [dir]
+  envcheck diagnose
   envcheck --help
   envcheck --version
 
 commands
   check     scan and report missing, empty, extra, and typo'd keys
   doctor    verify environment and schema setup
+  diagnose  machine-readable health report for CI and lint-staged
   fix       walk missing and orphaned keys, preview, then write
   init      build .env.example from keys already in your .env files
   about     version, author, exit codes
@@ -69,6 +72,7 @@ interface Parsed {
   stats: boolean;
   skipEmpty: boolean;
   skipNoPairs: boolean;
+  diagnose: boolean;
 }
 
 function parseArgs(args: string[]): Parsed {
@@ -88,6 +92,7 @@ function parseArgs(args: string[]): Parsed {
     stats: false,
     skipEmpty: false,
     skipNoPairs: false,
+    diagnose: false,
   };
   const positional: string[] = [];
   for (let i = 0; i < args.length; i++) {
@@ -98,6 +103,7 @@ function parseArgs(args: string[]): Parsed {
     else if (a === "--skip-empty") out.skipEmpty = true;
     else if (a === "--skip-no-pairs") out.skipNoPairs = true;
     else if (a === "--json") out.json = true;
+    else if (a === "--diagnose") out.diagnose = true;
     else if (a === "--reveal") out.reveal = true;
     else if (a === "--force") out.force = true;
     else if (a === "--dry-run") out.dryRun = true;
@@ -117,9 +123,9 @@ function parseArgs(args: string[]): Parsed {
       failUsage(`Unknown flag ${a}.`, `envcheck --help`);
     } else positional.push(a);
   }
-  if (positional[0] && ["check", "fix", "init", "about", "doctor"].includes(positional[0])) {
+  if (positional[0] && ["check", "fix", "init", "about", "doctor", "diagnose"].includes(positional[0])) {
     out.command = positional[0];
-    if (positional[1]) out.dir = positional[1];
+    if (positional[0] !== "diagnose" && positional[1]) out.dir = positional[1];
     if (positional.length > 2) failUsage(`Unexpected argument ${positional[2]}.`, "envcheck --help");
   } else if (positional[0]) {
     out.dir = positional[0];
@@ -209,6 +215,12 @@ async function main(): Promise<void> {
     });
     stdout.write(outcome.text);
     exit(outcome.exitCode);
+  }
+
+  if (parsed.command === "diagnose") {
+    const report = diagnose(flags.cwd);
+    stdout.write(JSON.stringify(report, null, 2) + "\n");
+    exit(report.issues.length ? Exit.Drift : Exit.Ok);
   }
 
   const outcome = runCheck(flags);
