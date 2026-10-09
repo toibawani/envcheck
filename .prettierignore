@@ -1,0 +1,10 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.env
+*.log
+
+# Pre-commit / tooling caches
+.envcheck-tmp
+*.tmp
