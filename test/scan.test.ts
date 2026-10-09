@@ -108,3 +108,40 @@ test("scan skips non-env files", () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test("scan returns rel paths with forward slashes", () => {
+  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+  try {
+    const sub = join(root, "sub");
+    mkdirSync(sub, { recursive: true });
+    writeFileSync(join(sub, ".env.local"), "A=1\n", "utf8");
+    const files = scanEnvFiles({ root, extraIgnore: [] });
+    assert.ok(files[0].rel.includes("/"), "rel uses forward slashes");
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("scan includes .env.template in discovery", () => {
+  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+  try {
+    writeFileSync(join(root, ".env.template"), "A=1\n", "utf8");
+    const files = scanEnvFiles({ root, extraIgnore: [] });
+    const names = files.map((f) => f.name);
+    assert.ok(names.includes(".env.template"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("scan does not treat .envcheckignore as an env file", () => {
+  const root = mkdtempSync(join(tmpdir(), "envcheck-scan-"));
+  try {
+    writeFileSync(join(root, ".envcheckignore"), "*.local\n", "utf8");
+    const files = scanEnvFiles({ root, extraIgnore: [] });
+    const names = files.map((f) => f.name);
+    assert.ok(!names.includes(".envcheckignore"));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
