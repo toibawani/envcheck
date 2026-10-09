@@ -16,3 +16,7 @@ Thumbs.db
 .vscode/
 *.log
 .cache/
+
+# tooling caches
+.envcheck-tmp
+*.tmp
