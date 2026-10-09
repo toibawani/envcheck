@@ -1,0 +1,5 @@
+{
+  "schema": ".env.example",
+  "ignore": ["**/.env.local", "**/.env.test.local"],
+  "maxDistance": 3
+}
