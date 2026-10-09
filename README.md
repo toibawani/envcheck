@@ -92,6 +92,23 @@ envcheck init
 # writes .env.example with KEY= lines only — never your secret values
 ```
 
+Aggregate issue counts:
+
+```text
+$ envcheck check --stats
+envcheck /Users/you/app
+schema .env.example
+
+!!  .env
+    missing  STRIPE_SECRET
+    empty    PORT:4
+    typo     DATBASE_URL → DATABASE_URL:2
+    extra    OLD_FLAG:6 ol…ag
+
+4 issues across 1 file  (1 missing, 1 empty, 1 typo, 1 extra)
+next: envcheck fix
+```
+
 ## Exit codes
 
 | Code | Meaning |
