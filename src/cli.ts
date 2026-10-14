@@ -72,7 +72,6 @@ interface Parsed {
   stats: boolean;
   skipEmpty: boolean;
   skipNoPairs: boolean;
-  diagnose: boolean;
 }
 
 function parseArgs(args: string[]): Parsed {
@@ -92,7 +91,6 @@ function parseArgs(args: string[]): Parsed {
     stats: false,
     skipEmpty: false,
     skipNoPairs: false,
-    diagnose: false,
   };
   const positional: string[] = [];
   for (let i = 0; i < args.length; i++) {
@@ -103,7 +101,6 @@ function parseArgs(args: string[]): Parsed {
     else if (a === '--skip-empty') out.skipEmpty = true;
     else if (a === '--skip-no-pairs') out.skipNoPairs = true;
     else if (a === '--json') out.json = true;
-    else if (a === '--diagnose') out.diagnose = true;
     else if (a === '--reveal') out.reveal = true;
     else if (a === '--force') out.force = true;
     else if (a === '--dry-run') out.dryRun = true;
