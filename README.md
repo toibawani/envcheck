@@ -98,6 +98,17 @@ envcheck fix
 envcheck init
 ```
 
+## CI
+
+In CI, fail only on specific issue kinds:
+
+```yaml
+- name: Check env drift
+  run: npx envcheck check --fail-on missing,typo
+```
+
+This lets extra keys pass during development while blocking missing required keys or typos that break deploys.
+
 ```text
 $ envcheck check
 envcheck /Users/you/app

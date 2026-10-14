@@ -78,3 +78,37 @@ test('init throws when .env files have no keys', () => {
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('init throws when schema exists without --force', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-init-'));
+  try {
+    writeFileSync(join(dir, '.env'), 'FOO=secret\n');
+    writeFileSync(join(dir, '.env.example'), 'OLD=1\n', 'utf8');
+    assert.throws(
+      () => runInit({ cwd: dir, schema: '.env.example', ignore: [], force: false, dryRun: false }),
+      (err: unknown) => {
+        assert.ok(err instanceof EnvcheckError);
+        assert.equal(err.exitCode, Exit.Usage);
+        assert.match(err.message, /already exists/);
+        return true;
+      },
+    );
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('init overwrites schema when --force is passed', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'envcheck-init-'));
+  try {
+    writeFileSync(join(dir, '.env'), 'FOO=secret\nBAR=x\n');
+    writeFileSync(join(dir, '.env.example'), 'OLD=1\n', 'utf8');
+    const out = runInit({ cwd: dir, schema: '.env.example', ignore: [], force: true, dryRun: false });
+    assert.equal(out.exitCode, 0);
+    const example = readFileSync(join(dir, '.env.example'), 'utf8');
+    assert.match(example, /BAR=/);
+    assert.doesNotMatch(example, /OLD=/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
