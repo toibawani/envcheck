@@ -89,7 +89,16 @@ export function scanEnvFiles(opts: ScanOptions): FoundFile[] {
         ent.name === '.turbo' ||
         ent.name === '.cache' ||
         ent.name === 'out' ||
-        ent.name === '.vercel'
+        ent.name === '.vercel' ||
+        ent.name === '.nx' ||
+        ent.name === '.amplify' ||
+        ent.name === '.sst' ||
+        ent.name === '.netlify' ||
+        ent.name === '.firebase' ||
+        ent.name === '.wrangler' ||
+        ent.name === '.terraform' ||
+        ent.name === '.idea' ||
+        ent.name === '.vscode'
       ) {
         continue;
       }
